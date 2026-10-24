@@ -1,0 +1,26 @@
+# === GOBLIN — dependencias del backend ===
+# Instalar con: pip install -r requirements.txt
+
+# Framework web y servidor
+fastapi==0.115.*
+uvicorn[standard]==0.32.*
+
+# Validación de datos
+pydantic==2.*
+
+# Base de datos (SQLite viene con Python; SQLModel es el ORM)
+sqlmodel==0.0.22
+
+# Cliente de Ollama
+ollama>=0.4.0
+
+# Configuración (.env)
+python-dotenv==1.*
+
+# Info del sistema (RAM/CPU para la barra de estado)
+psutil==6.*
+
+# --- Fases posteriores (comentadas hasta que toque) ---
+# ptyprocess==0.7.*          # terminal real (Fase 3)
+# faster-whisper==1.*        # dictado por voz (Fase 5)
+# google-generativeai==0.8.* # Gemini (Fase 2.5)

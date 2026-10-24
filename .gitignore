@@ -1,0 +1,32 @@
+# === GOBLIN — archivos que NO se suben a GitHub ===
+
+# Secretos y configuración local
+.env
+
+# Entorno virtual de Python
+.venv/
+venv/
+env/
+
+# Caché de Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# Base de datos y área de trabajo (datos del usuario, nunca al repo)
+data/
+workspace/
+
+# Logs
+*.log
+logs/
+
+# Archivos del sistema operativo
+.DS_Store
+Thumbs.db
+
+# Editores
+.vscode/
+.idea/
+*.swp
