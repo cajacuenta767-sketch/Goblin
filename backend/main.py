@@ -100,5 +100,22 @@ def health():
         return {"ollama": "down", "error": str(e)}
 
 
+@app.get("/api/system")
+def system():
+    """Uso de RAM y CPU para la barra de estado (RF8 de la spec 002)."""
+    try:
+        import psutil
+        vm = psutil.virtual_memory()
+        return {
+            "ok": True,
+            "ram_percent": vm.percent,
+            "ram_used_gb": round(vm.used / (1024 ** 3), 1),
+            "ram_total_gb": round(vm.total / (1024 ** 3), 1),
+            "cpu_percent": psutil.cpu_percent(interval=None),
+        }
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
+
+
 # Sirve el frontend (debe ir al final para no tapar las rutas /api)
 app.mount("/", StaticFiles(directory=FRONTEND, html=True), name="frontend")

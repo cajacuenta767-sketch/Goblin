@@ -20,23 +20,26 @@
 - ✅ T001.9 — Probar herramientas end-to-end (sin Ollama)
 - ⬜ T001.10 — Probar chat con DeepHat real (en la PC del usuario)
 
-## Spec 002 — Frontend IDE ⬜
+## Spec 002 — Frontend IDE ✅ (v1 sin Monaco)
 
-- ⬜ T002.1 — index.html (estructura de paneles)
-- ⬜ T002.2 — css/theme.css (tokens de color, verde goblin)
-- ⬜ T002.3 — css/layout.css (los 3 paneles)
-- ⬜ T002.4 — js/api.js (llamadas al backend)
-- ⬜ T002.5 — js/chat.js (enviar/recibir, etiqueta de modelo, markdown)
-- ⬜ T002.6 — js/approvals.js (caja de aprobación visual)
-- ⬜ T002.7 — js/explorer.js (árbol de archivos real)
-- ⬜ T002.8 — js/main.js (arranque, estado, barra de estado inferior)
-- ⬜ T002.9 — Validar: abrir en navegador y chatear de punta a punta
+- ✅ T002.1 — index.html (estructura de paneles)
+- ✅ T002.2 — css/theme.css (tokens de color, verde goblin)
+- ✅ T002.3 — css/layout.css (los 3 paneles + barra de estado + progreso)
+- ✅ T002.4 — js/api.js (llamadas al backend)
+- ✅ T002.5 — js/chat.js (enviar/recibir, etiqueta de modelo, markdown)
+- ✅ T002.6 — js/approvals.js (caja de aprobación visual, borde rojo si peligrosa)
+- ✅ T002.7 — js/explorer.js (árbol de archivos real, navegable)
+- ✅ T002.8 — js/main.js (arranque, estado, barra inferior con RAM/CPU)
+- ✅ T002.x — backend: endpoint /api/system (RAM/CPU) añadido
+- ✅ T002.9 — Validar endpoints + servido del frontend (sin Ollama)
+- ⬜ T002.10 — Validar chat real con DeepHat (en la PC del usuario)
+- ⬜ T002.11 — Editor Monaco (iteración futura, se dejó fuera de v1 a propósito)
 
 ## Infraestructura (transversal)
 
-- ⬜ TI.1 — scripts/install.sh (instalador Parrot, instala Ollama + deps + modelo)
-- ⬜ TI.2 — scripts/run.sh (arranque con flags de RAM/CPU)
-- ⬜ TI.3 — Subir a GitHub (repo público "goblin")
+- ✅ TI.1 — scripts/install.sh (instalador Parrot, instala Ollama + deps + modelo)
+- ✅ TI.2 — scripts/run.sh (arranque con flags de RAM/CPU)
+- ⬜ TI.3 — Subir a GitHub (repo público "goblin") — pendiente de reconectar GitHub
 
 ---
 

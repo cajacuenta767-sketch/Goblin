@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GOBLIN</title>
+<link rel="stylesheet" href="css/theme.css">
+<link rel="stylesheet" href="css/layout.css">
+<!-- Markdown + resaltado de código, por CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/14.1.2/marked.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.10.0/styles/atom-one-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.10.0/highlight.min.js"></script>
+</head>
+<body>
+
+  <!-- Barra de progreso (IA trabajando) -->
+  <div id="progress"></div>
+
+  <!-- Barra de ventana -->
+  <div id="titlebar">
+    <div class="win-dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></div>
+    <div class="menu"><span>File</span><span>View</span><span>Window</span></div>
+    <div class="brand">⬢ GOBLIN</div>
+  </div>
+
+  <div id="main">
+    <!-- Sidebar -->
+    <aside id="sidebar">
+      <div class="top">
+        <span class="logo">⬢</span>
+        <div class="icons">☰ ← → ⌕</div>
+      </div>
+      <div class="newconv" id="newConv">＋ New Conversation</div>
+      <div class="navitem">◷ Conversation History</div>
+      <div class="navitem">⚙ Automations</div>
+      <div class="navitem">✎ Customizations</div>
+
+      <div class="section-label">Projects</div>
+      <div class="navitem">📁 Engagements</div>
+
+      <div class="section-label">Conversations</div>
+      <div class="conv-list" id="convList">
+        <div class="conv active"><span class="t">Nueva conversación</span><span class="age">ahora</span></div>
+      </div>
+      <div class="bottom">⚙ Settings</div>
+    </aside>
+
+    <!-- Chat -->
+    <section id="chat">
+      <div class="chat-head">
+        <span class="title" id="chatTitle">GOBLIN</span>
+        <div class="right">⋮</div>
+      </div>
+      <div class="messages" id="messages">
+        <div class="msg ai">
+          <div class="who">GOBLIN <span class="model-tag" id="welcomeModel">DeepHat</span></div>
+          <div class="bubble">Hola. Soy GOBLIN, tu asistente de ciberseguridad con control del sistema. Puedo crear, mover y borrar archivos, y ejecutar comandos. Las acciones peligrosas te las pediré aprobar. ¿En qué trabajamos?</div>
+        </div>
+
+        <!-- Indicador de "trabajando" -->
+        <div class="typing" id="typing"><span class="spinner"></span> GOBLIN está trabajando…</div>
+
+        <!-- Caja de aprobación -->
+        <div id="approval">
+          <div class="head">⚠️ <span>La IA quiere ejecutar una acción</span></div>
+          <pre id="approvalText"></pre>
+          <div class="btns">
+            <button class="ok" id="approveBtn">Aprobar</button>
+            <button class="deny" id="denyBtn">Denegar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="inputbar">
+        <div class="inputbox">
+          <textarea id="input" placeholder="Ask anything, @ to mention, / for actions" rows="1"></textarea>
+          <div class="inputrow">
+            <div class="chip" title="Adjuntar (próximamente)">＋</div>
+            <div class="chip model" id="modelChip">⬢ DeepHat ▾</div>
+            <div class="chip" id="modeChip">◈ Local ▾</div>
+            <div class="spacer"></div>
+            <div class="iconbtn" title="Dictado por voz (próximamente)">🎤</div>
+            <div class="iconbtn send" id="sendBtn" title="Enviar">➤</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Explorador -->
+    <aside id="right">
+      <div class="ws-head">
+        <span>📂</span>
+        <span class="path" id="wsPath">workspace</span>
+        <span class="r" id="wsRefresh" title="Refrescar">↻</span>
+      </div>
+      <div class="ws-list" id="wsList"></div>
+      <div class="ws-view" id="wsView"></div>
+    </aside>
+  </div>
+
+  <!-- Barra de estado inferior -->
+  <div id="statusbar">
+    <span class="item"><span id="stOllama">●</span> <span id="stOllamaText">Ollama</span></span>
+    <span class="item">Modelo: <span class="accent" id="stModel">—</span></span>
+    <span class="item">Modo: <span id="stMode">Local</span></span>
+    <span class="item sep">RAM: <span id="stRam">—</span></span>
+    <span class="item">CPU: <span id="stCpu">—</span></span>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script src="js/chat.js"></script>
+  <script src="js/approvals.js"></script>
+  <script src="js/explorer.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

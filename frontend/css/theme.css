@@ -1,0 +1,36 @@
+/* === GOBLIN — Tema (tokens de color) ===
+   Negro estilo Antigravity, acento verde goblin. */
+
+:root {
+  --bg:         #0d0d0f;   /* fondo principal */
+  --panel:      #161618;   /* paneles */
+  --panel-2:    #1b1b1e;   /* paneles elevados / hover */
+  --line:       #2a2a2e;   /* bordes sutiles */
+  --text:       #e6e6e6;   /* texto principal */
+  --text-dim:   #8a8a90;   /* texto tenue */
+  --text-faint: #55555c;   /* texto muy tenue */
+
+  --accent:     #3ddc84;   /* verde goblin */
+  --accent-dim: #1f6e44;   /* verde apagado */
+  --accent-ink: #06260f;   /* texto sobre fondo verde */
+
+  --red:        #e05555;   /* peligro / denegar */
+  --red-dim:    #8a3b3b;
+  --amber:      #e0c055;   /* advertencia */
+  --blue:       #61afef;   /* info / rutas */
+
+  --user-bubble: #22262c;  /* burbuja del usuario */
+
+  --diff-add: rgba(61, 220, 132, 0.12);
+  --diff-del: rgba(224, 85, 85, 0.14);
+
+  /* Severidad de hallazgos (Fase 8) */
+  --sev-critical: #e05555;
+  --sev-high:     #e0883b;
+  --sev-medium:   #e0c055;
+  --sev-low:      #61afef;
+  --sev-info:     #8a8a90;
+
+  --mono: "JetBrains Mono", "Fira Code", "Courier New", monospace;
+  --sans: "Segoe UI", system-ui, -apple-system, sans-serif;
+}
