@@ -19,11 +19,18 @@ import router
 import approvals
 from ollama import Client
 from tools import SCHEMAS, NEEDS_APPROVAL, run_tool
+from text_toolcall import parse_text_toolcall
 
 # Permite importar el cliente de Gemini desde core/llm/
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "core", "llm"))
 
 client = Client(host=config.OLLAMA_HOST)
+
+
+class _FakeCall:
+    """Imita una tool_call de Ollama para el respaldo por texto (Spec 022)."""
+    def __init__(self, name, args):
+        self.function = type("F", (), {"name": name, "arguments": args})()
 
 SYSTEM_PROMPT = (
     "Eres GOBLIN, un asistente de ciberseguridad y pentesting que trabaja dentro de la "
@@ -41,8 +48,9 @@ SYSTEM_PROMPT = (
     "  /scan         → escaneo de vulnerabilidades\n"
     "  /report       → genera el informe de pentest con los hallazgos\n\n"
     "REGLAS: antes de acciones destructivas (borrar, sobrescribir, comandos peligrosos), "
-    "explica en una frase qué harás y por qué. Usa SIEMPRE las herramientas para actuar "
-    "sobre el sistema, no solo describas los comandos. Responde en español. "
+    "explica en una frase qué harás y por qué. Usa herramientas SOLO cuando el usuario "
+    "pida una acción concreta sobre el sistema; ante saludos o preguntas generales, "
+    "responde en texto y no llames ninguna herramienta. Responde en español. "
     "Opera SOLO sobre objetivos con autorización explícita; si no está claro, pregúntalo."
 )
 
@@ -155,6 +163,13 @@ def _step(s: dict, sid: str | None = None) -> dict:
         s["messages"].append(msg)
 
         if not msg.tool_calls:
+            # Respaldo (Spec 022): DeepHat a veces escribe la tool call como
+            # texto suelto en vez del formato <tool_call> nativo. La recuperamos.
+            fallback = parse_text_toolcall(msg.content or "")
+            if fallback is not None:
+                print(f"[GOBLIN] Tool call recuperada por texto: {fallback['tool']}")
+                s["queue"] = [_FakeCall(fallback["tool"], fallback["args"])]
+                continue
             s["steps"] = 0
             # Guardar la respuesta final de la IA en la base de datos.
             if sid and (msg.content or ""):
