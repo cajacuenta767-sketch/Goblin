@@ -41,8 +41,14 @@
       <div class="navitem">⚙ Automations</div>
       <div class="navitem">✎ Customizations</div>
 
-      <div class="section-label">Projects</div>
-      <div class="navitem">📁 Engagements</div>
+      <!-- Panel de hallazgos (pentest) -->
+      <div id="findingsPanel">
+        <div class="section-label findings-head" id="findingsToggle">
+          🎯 Hallazgos <span class="findings-count" id="findingsCount">0</span>
+          <span class="report-link" id="reportBtn" title="Generar informe">📄 Informe</span>
+        </div>
+        <div class="findings-list" id="findingsList"></div>
+      </div>
 
       <div class="section-label">Conversations</div>
       <div class="conv-list" id="convList">
@@ -142,6 +148,8 @@
   <script src="js/explorer.js"></script>
   <script src="js/terminal.js"></script>
   <script src="js/voice.js"></script>
+  <script src="js/sessions.js"></script>
+  <script src="js/findings.js"></script>
   <script src="js/main.js"></script>
 </body>
 </html>

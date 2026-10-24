@@ -1,7 +1,7 @@
 // === GOBLIN — Panel de chat ===
 
 const Chat = {
-  sessionId: "main",
+  sessionId: "sess-" + Date.now(),
   busy: false,
 
   el: {
@@ -81,6 +81,8 @@ const Chat = {
       this.addMessage("ai", resp.content, resp.model);
       this.setBusy(false);
       Explorer.refresh();            // por si la IA cambió archivos
+      if (window.Sessions) Sessions.refresh();   // actualizar sidebar
+      if (window.Findings) Findings.refresh();   // por si registró hallazgos
     }
   },
 

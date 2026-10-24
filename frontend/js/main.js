@@ -14,6 +14,8 @@ const App = {
     Explorer.init();
     Terminal_.init();
     if (window.Voice) Voice.init();
+    if (window.Sessions) Sessions.init();
+    if (window.Findings) Findings.init();
     this.wireUI();
     await this.loadInfo();
     await this.refreshStatus();
@@ -42,9 +44,10 @@ const App = {
   },
 
   wireUI() {
-    // Nueva conversación: reinicia el chat visual
+    // Nueva conversación: crea una sesión nueva (persistente)
     document.getElementById("newConv").addEventListener("click", () => {
-      document.querySelectorAll(".msg").forEach((m, i) => { if (i > 0) m.remove(); });
+      if (window.Sessions) Sessions.newSession();
+      else document.querySelectorAll(".msg").forEach((m, i) => { if (i > 0) m.remove(); });
     });
     // marked: abrir enlaces en pestaña nueva y no romper con HTML
     if (window.marked) {

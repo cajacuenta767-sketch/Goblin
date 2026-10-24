@@ -71,6 +71,22 @@ body {
 .conv.active { background: var(--panel-2); color: var(--text); border-left: 2px solid var(--accent); }
 .conv .t { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px; }
 .conv .age { font-size: 11px; color: var(--text-faint); }
+.conv .del { font-size: 11px; color: var(--text-faint); cursor: pointer; opacity: 0; }
+.conv:hover .del { opacity: 1; }
+.conv .del:hover { color: var(--red); }
+
+/* Panel de hallazgos */
+#findingsPanel { border-bottom: 1px solid var(--line); }
+.findings-head { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+.findings-count { background: var(--accent-dim); color: #d6ffe8; border-radius: 10px; padding: 0 7px; font-size: 10px; }
+.report-link { margin-left: auto; color: var(--accent); font-size: 10px; text-transform: none; letter-spacing: 0; }
+.findings-list { max-height: 160px; overflow-y: auto; }
+.finding { display: flex; align-items: center; gap: 8px; padding: 5px 14px; font-size: 12px; }
+.finding .sev { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+.finding .finfo { display: flex; flex-direction: column; overflow: hidden; }
+.finding .ftitle { color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.finding .fmeta { color: var(--text-faint); font-size: 10px; }
+.finding-empty { padding: 6px 14px; color: var(--text-faint); font-size: 11px; }
 #sidebar .bottom { border-top: 1px solid var(--line); padding: 10px 14px; color: var(--text-dim); cursor: pointer; display: flex; align-items: center; gap: 10px; }
 
 /* --- Chat --- */
