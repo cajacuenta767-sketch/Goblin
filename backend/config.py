@@ -21,6 +21,9 @@ OLLAMA_HOST = os.getenv("OLLAMA_HOST", "http://127.0.0.1:11434")
 DEFAULT_MODEL = os.getenv("GOBLIN_MODEL", "hf.co/mradermacher/DeepHat-V1-7B-GGUF:Q4_K_M")
 NUM_CTX = int(os.getenv("GOBLIN_NUM_CTX", "4096"))      # contexto reducido para ahorrar RAM
 KEEP_ALIVE = os.getenv("GOBLIN_KEEP_ALIVE", "10m")      # descarga el modelo tras 10 min inactivo
+NUM_THREAD = int(os.getenv("GOBLIN_NUM_THREAD", "8"))    # hilos de CPU (núcleos físicos del i7-10700)
+# Modelo pequeño SOLO para saludos cortos (Spec 032). Vacío = desactivado.
+FAST_MODEL = os.getenv("GOBLIN_FAST_MODEL", "").strip()
 
 # --- Workspace y acceso ---
 WORKSPACE = Path(os.getenv("GOBLIN_WORKSPACE", ROOT / "workspace")).expanduser().resolve()
@@ -31,6 +34,8 @@ FULL_ACCESS = os.getenv("GOBLIN_FULL_ACCESS", "true").lower() == "true"
 # --- Agente ---
 MAX_STEPS = int(os.getenv("GOBLIN_MAX_STEPS", "15"))    # tope de iteraciones (evita bucles)
 SHELL_TIMEOUT = int(os.getenv("GOBLIN_SHELL_TIMEOUT", "180"))  # segundos por comando
+# Tope de caracteres de una salida de herramienta que vuelve al modelo (Spec 032).
+TOOL_OUTPUT_CHARS = int(os.getenv("GOBLIN_TOOL_OUTPUT_CHARS", "6000"))
 
 # --- Router híbrido / Gemini (Spec 008, opcional) ---
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "").strip()

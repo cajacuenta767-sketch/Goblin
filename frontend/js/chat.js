@@ -158,6 +158,11 @@ const Chat = {
         if (!p.startsWith("data: ")) continue;
         let ev; try { ev = JSON.parse(p.slice(6)); } catch { continue; }
         if (ev.type === "fallback") { fell = true; }
+        else if (ev.type === "discard") {
+          // Spec 032: el modelo pidió herramientas; quitamos el texto ya mostrado.
+          if (bubble) { bubble.closest(".msg")?.remove(); }
+          bubble = null; full = "";
+        }
         else if (ev.type === "token") { ensureBubble(); full += ev.content; bubble.textContent = full; this.scrollDown(); }
         else if (ev.type === "stopped") {
           if (bubble) bubble.innerHTML = this.renderMarkdown(full);

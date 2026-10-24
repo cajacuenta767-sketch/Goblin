@@ -53,6 +53,32 @@ def looks_like_refusal(text: str) -> bool:
     return any(h in low for h in _REFUSAL_HINTS)
 
 
+_GREETING_RE = re.compile(
+    r"^(hola|holi|buenas|buenos d[ií]as|buenas tardes|buenas noches|hey|hi|hello|"
+    r"gracias|muchas gracias|ok|vale|qu[ée] tal|que tal)[\s!.,¡]*$"
+)
+
+# Temas de pentest: van directo a DeepHat (Spec 032, RF6). Sin "\b" al final para
+# que cubra variantes como "escaneo", "escanea" o "exploits".
+_PENTEST_RE = re.compile(
+    r"\b(nmap|sqlmap|metasploit|msfconsole|exploit|payload|reverse shell|shell inversa|"
+    r"escane|pentest|vulnerab|hashcat|gobuster|ffuf|feroxbuster|burp|privesc|"
+    r"escalada de privilegios|enumera|fuzz|cve-\d|hallazgo|post-explot|pivot)",
+    re.IGNORECASE,
+)
+
+
+def is_greeting(text: str) -> bool:
+    """Saludo o agradecimiento corto, sin pregunta (Spec 032, RF5)."""
+    t = (text or "").strip().lower().lstrip("¡¿ ")
+    return len(t) <= 40 and "?" not in t and bool(_GREETING_RE.match(t))
+
+
+def needs_local_intent(text: str) -> bool:
+    """Tema de pentest: conviene DeepHat local directo, sin pasar por Gemini (Spec 032, RF6)."""
+    return bool(_PENTEST_RE.search(text or ""))
+
+
 def sensitive_reason(messages, target: str = "") -> str | None:
     """Qué dato sensible aparece en TODO el historial, o None (Spec 025).
 

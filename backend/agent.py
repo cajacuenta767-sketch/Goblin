@@ -14,6 +14,7 @@ Diseño del bucle:
   sensibles (IP, rango de red u objetivo activo), la respuesta la genera DeepHat local.
 """
 import json
+import queue
 import sys
 import os
 import threading
@@ -49,11 +50,6 @@ SYSTEM_PROMPT = (
     "post-explotación y reporte. Cuando encuentres algo relevante (puerto abierto con "
     "servicio vulnerable, mala configuración, credencial), REGÍSTRALO con add_finding "
     "indicando la severidad (critical/high/medium/low/info).\n\n"
-    "COMANDOS RÁPIDOS que el usuario puede usar:\n"
-    "  /target <ip>  → fija el objetivo y crea su estructura de carpetas\n"
-    "  /recon        → reconocimiento del objetivo actual (nmap, enumeración de servicios)\n"
-    "  /scan         → escaneo de vulnerabilidades\n"
-    "  /report       → genera el informe de pentest con los hallazgos\n\n"
     "REGLAS: antes de acciones destructivas (borrar, sobrescribir, comandos peligrosos), "
     "explica en una frase qué harás y por qué. Usa herramientas SOLO cuando el usuario "
     "pida una acción concreta sobre el sistema; ante saludos o preguntas generales, "
@@ -78,13 +74,48 @@ def get_session(sid: str, model: str | None = None) -> dict:
     return sessions[sid]
 
 
+def _opts() -> dict:
+    """Opciones de Ollama para cada llamada (Spec 032, RF7)."""
+    return {"num_ctx": config.NUM_CTX, "num_thread": config.NUM_THREAD}
+
+
+def _fit_tool_output(text: str, limit: int | None = None) -> str:
+    """Recorta una salida de herramienta para el modelo, conservando inicio y final (RF3).
+
+    La salida completa ya está en la auditoría; aquí solo se limita lo que procesa la CPU.
+    """
+    limit = config.TOOL_OUTPUT_CHARS if limit is None else limit
+    if not text or len(text) <= limit:
+        return text
+    head = (limit * 2) // 3
+    tail = limit - head
+    omitted = len(text) - head - tail
+    return (f"{text[:head]}\n[... {omitted} caracteres omitidos para ahorrar contexto ...]\n"
+            f"{text[-tail:]}")
+
+
+def _role(m) -> str | None:
+    return m.get("role") if isinstance(m, dict) else getattr(m, "role", None)
+
+
+def _content(m) -> str:
+    return (m.get("content") if isinstance(m, dict) else getattr(m, "content", "")) or ""
+
+
+def _last_user_text(messages) -> str:
+    for m in reversed(messages):
+        if _role(m) == "user":
+            return _content(m)
+    return ""
+
+
 def _call_deephat(s: dict):
     """Llama al modelo local (DeepHat) vía Ollama."""
     resp = client.chat(
         model=s["model"],
         messages=s["messages"],
         tools=SCHEMAS,
-        options={"num_ctx": config.NUM_CTX},
+        options=_opts(),
         keep_alive=config.KEEP_ALIVE,
     )
     resp._goblin_model = "DeepHat"
@@ -113,6 +144,11 @@ def _call_model(s: dict, sid: str | None = None):
             resp = _call_deephat(s)
             resp._goblin_note = (f"🔒 Hay {reason} en la conversación: esta respuesta la generó "
                                  "DeepHat en local. Gemini no recibió nada.")
+            return resp
+        # Tema de pentest: DeepHat directo, sin esperar a un rechazo de Gemini (Spec 032, RF6).
+        if router.needs_local_intent(_last_user_text(s["messages"])):
+            resp = _call_deephat(s)
+            resp._goblin_note = "🛠️ Tema de pentest: respondió DeepHat en local directamente."
             return resp
         try:
             import gemini_client
@@ -154,6 +190,50 @@ def _call_interruptible(fn, sid: str | None):
     if "error" in box:
         raise box["error"]
     return box.get("value"), False
+
+
+_END = object()
+
+
+def _iter_chunks(open_stream, sid: str | None, halt: threading.Event):
+    """Lee el stream de Ollama en un hilo y lo entrega al hilo principal (Spec 032, RF2).
+
+    Así Detener responde al instante aunque Ollama tarde en dar el primer token.
+    Si se cancela o se pide parar (`halt`), el hilo cierra el stream y Ollama deja de generar.
+    Entrega ("chunk", pieza) y, si se cancela, ("cancelled", None).
+    """
+    q: queue.Queue = queue.Queue()
+
+    def worker():
+        gen = None
+        try:
+            gen = open_stream()
+            for chunk in gen:
+                if halt.is_set() or cancel.is_cancelled(sid):
+                    break
+                q.put(("chunk", chunk))
+        except Exception as e:  # noqa: BLE001 - se vuelve a lanzar en el hilo principal
+            q.put(("error", e))
+        finally:
+            close = getattr(gen, "close", None)
+            if callable(close):
+                close()   # corta la generación en Ollama
+            q.put((_END, None))
+
+    threading.Thread(target=worker, daemon=True).start()
+    while True:
+        try:
+            kind, item = q.get(timeout=0.2)
+        except queue.Empty:
+            if cancel.is_cancelled(sid) or halt.is_set():
+                yield "cancelled", None
+                return
+            continue
+        if kind is _END:
+            return
+        if kind == "error":
+            raise item
+        yield kind, item
 
 
 def _exec(call, sid: str | None = None, approved: bool = True) -> dict:
@@ -199,7 +279,8 @@ def _step(s: dict, sid: str | None = None) -> dict:
             # Herramienta segura: ejecutar sin preguntar
             s["queue"].pop(0)
             done = _exec(call, sid, approved=True)
-            s["messages"].append({"role": "tool", "content": done["result"], "tool_name": name})
+            s["messages"].append({"role": "tool", "content": _fit_tool_output(done["result"]),
+                                  "tool_name": name})
             continue
 
         # 2) Tope de pasos (anti-bucle)
@@ -294,7 +375,7 @@ def approve(sid: str, approved: bool) -> dict:
                           result, approved=False)
         except Exception:
             pass
-    s["messages"].append({"role": "tool", "content": result, "tool_name": name})
+    s["messages"].append({"role": "tool", "content": _fit_tool_output(result), "tool_name": name})
     return _step(s, sid)
 
 
@@ -341,51 +422,52 @@ def stream_message(sid: str, text: str, model: str | None = None):
         yield {"type": "fallback"}
         return
 
-    # Primer sondeo SIN stream para saber si pedirá herramientas.
-    try:
-        probe, cancelled = _call_interruptible(
-            lambda: client.chat(model=s["model"], messages=s["messages"], tools=SCHEMAS,
-                                options={"num_ctx": config.NUM_CTX}, keep_alive=config.KEEP_ALIVE),
-            sid)
-    except Exception as e:
-        yield {"type": "error", "content": f"Error al contactar el modelo: {e}"}
-        return
-    if cancelled:
-        yield {"type": "stopped", "content": "Detenido por el usuario.", "model": s["model"]}
-        return
+    # Saludo corto y modelo rápido configurado: no hace falta el modelo grande (RF5).
+    fast = config.FAST_MODEL if (config.FAST_MODEL and router.is_greeting(text)) else ""
+    use_model = fast or s["model"]
+    use_tools = None if fast else SCHEMAS
+    label = f"DeepHat-rápido ({fast})" if fast else "DeepHat"
 
-    if probe.message.tool_calls:
-        # Necesita herramientas → el flujo normal lo maneja (con aprobaciones).
-        s["messages"].pop()  # quitar el user que reañadirá user_message
-        s["messages"].pop() if s["messages"] and s["messages"][-1].get("role") == "user" else None
-        yield {"type": "fallback"}
-        return
+    def _open_stream():
+        return client.chat(model=use_model, messages=s["messages"], tools=use_tools,
+                           options=_opts(), keep_alive=config.KEEP_ALIVE, stream=True)
 
-    # Respuesta de texto: re-pedimos en streaming para transmitir token a token.
+    # UNA sola generación (RF1): el texto se muestra en vivo; si aparece una herramienta,
+    # el texto ya mostrado se descarta y se sigue por el flujo normal con aprobaciones.
     full = ""
+    tool_seen = False
+    halt = threading.Event()
     try:
-        stream = client.chat(model=s["model"], messages=s["messages"],
-                             options={"num_ctx": config.NUM_CTX},
-                             keep_alive=config.KEEP_ALIVE, stream=True)
-        for chunk in stream:
-            if cancel.is_cancelled(sid):
-                close = getattr(stream, "close", None)   # corta la generación en Ollama
-                if callable(close):
-                    close()
+        for kind, item in _iter_chunks(_open_stream, sid, halt):
+            if kind == "cancelled":
                 break
-            piece = chunk.message.content or ""
+            if item.message.tool_calls:
+                tool_seen = True
+                halt.set()
+                break
+            piece = item.message.content or ""
             if piece:
                 full += piece
                 yield {"type": "token", "content": piece}
     except Exception as e:
+        halt.set()
         yield {"type": "error", "content": f"Error en streaming: {e}"}
+        return
+
+    if tool_seen:
+        # Quitar el user que reañadirá user_message y pasar al flujo normal.
+        if s["messages"] and _role(s["messages"][-1]) == "user":
+            s["messages"].pop()
+        if full:
+            yield {"type": "discard"}
+        yield {"type": "fallback"}
         return
 
     if cancel.is_cancelled(sid):
         # Se guarda lo que alcanzó a generarse, marcado como detenido.
         s["messages"].append({"role": "assistant", "content": full})
         try:
-            db.add_message(sid, "assistant", (full + "\n[detenido]").strip(), "DeepHat")
+            db.add_message(sid, "assistant", (full + "\n[detenido]").strip(), label)
         except Exception:
             pass
         yield {"type": "stopped", "content": "Detenido por el usuario.", "model": s["model"]}
@@ -393,7 +475,7 @@ def stream_message(sid: str, text: str, model: str | None = None):
 
     s["messages"].append({"role": "assistant", "content": full})
     try:
-        db.add_message(sid, "assistant", full, "DeepHat")
+        db.add_message(sid, "assistant", full, label)
     except Exception:
         pass
-    yield {"type": "done", "model": "DeepHat"}
+    yield {"type": "done", "model": label}

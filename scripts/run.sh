@@ -12,6 +12,7 @@ info() { echo -e "${GREEN}[GOBLIN]${NC} $1"; }
 export OLLAMA_NUM_PARALLEL=1        # un solo request a la vez
 export OLLAMA_MAX_LOADED_MODELS=1   # no mantener 2 modelos en RAM
 export OLLAMA_NUM_THREADS="${OLLAMA_NUM_THREADS:-8}"  # los 8 núcleos físicos
+export OLLAMA_FLASH_ATTENTION="${OLLAMA_FLASH_ATTENTION:-1}"  # atención más rápida, misma calidad (Spec 032)
 
 # --- Entorno virtual ---
 if [ ! -d .venv ]; then

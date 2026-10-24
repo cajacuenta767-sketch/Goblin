@@ -94,6 +94,19 @@ Cada spec tiene su checklist sin marcar. No se marca hasta validarla en la PC.
 
 ---
 
+## Spec 032 — Rendimiento sin perder inteligencia — 🟨
+
+- ✅ Una sola generación por respuesta de texto (antes había un sondeo que se descartaba).
+- ✅ Detener corta el stream en menos de 2 s aunque el modelo no haya dado el primer token (test).
+- ✅ Salidas de herramientas recortadas a `GOBLIN_TOOL_OUTPUT_CHARS` (inicio + final).
+- ✅ System prompt sin comandos que no existen (`/target`, `/recon`, `/scan`, `/report`).
+- ✅ Saludos cortos con `GOBLIN_FAST_MODEL` (apagado por defecto) y sin herramientas.
+- ✅ Temas de pentest en híbrido van directo a DeepHat (sin reintento tras rechazo de Gemini).
+- ✅ `num_thread` desde `GOBLIN_NUM_THREAD`; `OLLAMA_FLASH_ATTENTION=1` en `run.sh`.
+- ✅ Pruebas: 82 pasan (`backend/tests/test_rendimiento.py`, 12 nuevas).
+- ⬜ PC: medir tiempo al primer token y tokens/s antes y después con DeepHat real.
+- ⬜ PC: decidir si se descarga `qwen2.5-coder:1.5b` para `GOBLIN_FAST_MODEL`.
+
 ## Infraestructura (transversal) — ✅
 
 - ✅ `scripts/install.sh`, `run.sh`, `build.sh`, `install-nativo.sh`, `subir-github.sh`.
