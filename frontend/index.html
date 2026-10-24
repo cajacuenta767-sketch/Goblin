@@ -10,6 +10,10 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/14.1.2/marked.min.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.10.0/styles/atom-one-dark.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.10.0/highlight.min.js"></script>
+<!-- Terminal (xterm.js), por CDN -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/xterm/5.3.0/xterm.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xterm/5.3.0/xterm.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xterm-addon-fit/0.8.0/xterm-addon-fit.min.js"></script>
 </head>
 <body>
 
@@ -71,6 +75,17 @@
         </div>
       </div>
 
+      <!-- Panel de terminal (pty real) -->
+      <div id="termPanel">
+        <div class="term-head">
+          <span class="term-tab">● bash</span>
+          <span class="term-actions">
+            <span id="termToggle" title="Mostrar/ocultar terminal">⌃</span>
+          </span>
+        </div>
+        <div id="termBody"></div>
+      </div>
+
       <div class="inputbar">
         <div class="inputbox">
           <textarea id="input" placeholder="Ask anything, @ to mention, / for actions" rows="1"></textarea>
@@ -78,6 +93,7 @@
             <div class="chip" title="Adjuntar (próximamente)">＋</div>
             <div class="chip model" id="modelChip">⬢ DeepHat ▾</div>
             <div class="chip" id="modeChip">◈ Local ▾</div>
+            <div class="chip" id="termChip" title="Abrir/cerrar terminal">▣ Terminal</div>
             <div class="spacer"></div>
             <div class="iconbtn" title="Dictado por voz (próximamente)">🎤</div>
             <div class="iconbtn send" id="sendBtn" title="Enviar">➤</div>
@@ -111,6 +127,7 @@
   <script src="js/chat.js"></script>
   <script src="js/approvals.js"></script>
   <script src="js/explorer.js"></script>
+  <script src="js/terminal.js"></script>
   <script src="js/main.js"></script>
 </body>
 </html>

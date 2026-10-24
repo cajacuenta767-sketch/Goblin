@@ -5,7 +5,7 @@ Escucha solo en 127.0.0.1 (nadie externo puede acceder).
 """
 from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
@@ -14,6 +14,7 @@ from ollama import Client
 import config
 import agent
 import state
+import terminal
 from tools import list_dir
 
 FRONTEND = Path(__file__).resolve().parent.parent / "frontend"
@@ -115,6 +116,18 @@ def system():
         }
     except Exception as e:
         return {"ok": False, "error": str(e)}
+
+
+@app.websocket("/ws/terminal")
+async def ws_terminal(websocket: WebSocket):
+    """Terminal pty real (Spec 004). Arranca en el workspace o en la carpeta del target."""
+    await websocket.accept()
+    # Si hay un target fijado, arranca la terminal en su carpeta de engagement.
+    cwd = str(config.WORKSPACE)
+    try:
+        await terminal.run_terminal(websocket, cwd)
+    except WebSocketDisconnect:
+        pass
 
 
 # Sirve el frontend (debe ir al final para no tapar las rutas /api)

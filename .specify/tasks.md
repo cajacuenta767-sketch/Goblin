@@ -57,11 +57,20 @@
 
 ---
 
+## Spec 004 — Terminal integrada (pty real) ✅
+
+- ✅ T004.1 — backend/terminal.py (shell bash persistente sobre pty)
+- ✅ T004.2 — backend/main.py: WebSocket /ws/terminal
+- ✅ T004.3 — frontend: xterm.js por CDN + panel de terminal
+- ✅ T004.4 — frontend/js/terminal.js (cliente xterm ↔ WebSocket)
+- ✅ T004.5 — CSS del panel de terminal + botón "Terminal" en el input
+- ✅ T004.6 — Validado end-to-end: cd y variables persisten (shell real viva)
+
 ## Próximas specs (aún sin escribir)
 
-- 003 — Terminal pty integrada (Fase 3)
-- 004 — Persistencia (SQLite: sesiones, mensajes)
-- 005 — Hallazgos e informe de pentest (Fase 8)
-- 006 — Router híbrido Gemini + DeepHat (Fase 2.5)
-- 007 — Dictado por voz (Whisper local, Fase 5)
-- 008 — Autoaprobación configurable por niveles
+- 005 — Persistencia (SQLite: sesiones, mensajes)
+- 006 — Hallazgos e informe de pentest (Fase 8)
+- 007 — Editor Monaco (ver/editar archivos)
+- 008 — Router híbrido Gemini + DeepHat (Fase 2.5)
+- 009 — Dictado por voz (Whisper local, Fase 5)
+- 010 — Autoaprobación configurable por niveles

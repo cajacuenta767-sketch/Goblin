@@ -11,6 +11,7 @@ const App = {
     Chat.init();
     Approvals.init();
     Explorer.init();
+    Terminal_.init();
     this.wireUI();
     await this.loadInfo();
     await this.refreshStatus();
