@@ -42,7 +42,7 @@ const Explorer = {
 
       const items = this.parse(resp.listing);
       this.el.list.innerHTML = "";
-      this.el.view.classList.remove("show");
+      if (this.el.view) this.el.view.classList.remove("show");   // #wsView no existe en esta versión del HTML
 
       // botón "subir"
       const up = document.createElement("div");
@@ -66,7 +66,7 @@ const Explorer = {
 
   view(path) {
     // Abre el archivo en el editor Monaco (Spec 007)
-    if (window.Editor) Editor.open(path);
+    if ((typeof Editor !== "undefined" && Editor)) Editor.open(path);
   },
 
   refresh() { this.load(this.cwd); },

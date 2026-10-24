@@ -40,7 +40,7 @@ const Sessions = {
         else if (m.role === "assistant") Chat.addMessage("ai", m.content, m.model);
       }
       this.refresh();
-      if (window.Findings) Findings.refresh();
+      if ((typeof Findings !== "undefined" && Findings)) Findings.refresh();
     } catch { /* ignore */ }
   },
 
@@ -60,6 +60,6 @@ const Sessions = {
     Chat.sessionId = "sess-" + Date.now();
     document.querySelectorAll("#messages .msg").forEach((m, i) => { if (i > 0) m.remove(); });
     this.refresh();
-    if (window.Findings) Findings.refresh();
+    if ((typeof Findings !== "undefined" && Findings)) Findings.refresh();
   },
 };

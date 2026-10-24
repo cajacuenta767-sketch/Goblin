@@ -7,22 +7,27 @@ window.GOBLIN = {
 
 const App = {
   async init() {
-    await this.inlineLogos();   // mete el SVG del goblin inline para poder animarlo
-    Chat.init();
-    Approvals.init();
-    Editor.init();
-    Explorer.init();
-    Terminal_.init();
-    if (window.Voice) Voice.init();
-    if (window.Sessions) Sessions.init();
-    if (window.Findings) Findings.init();
-    if (window.ToolStore) ToolStore.init();
-    this.wireUI();
-    await this.loadInfo();
-    await this.refreshStatus();
-    await this.checkDiagnostics();
+    // Cada paso va aislado: si uno falla, los demás (y los botones) siguen funcionando.
+    const safe = (name, fn) => {
+      try { return fn(); } catch (e) { console.error("[GOBLIN] falló " + name + ":", e); }
+    };
+    await safe("logos", () => this.inlineLogos());
+    safe("chat", () => Chat.init());
+    safe("aprobaciones", () => Approvals.init());
+    safe("editor", () => Editor.init());
+    safe("explorador", () => Explorer.init());
+    safe("terminal", () => Terminal_.init());
+    safe("voz", () => Voice.init());
+    safe("sesiones", () => Sessions.init());
+    safe("hallazgos", () => Findings.init());
+    safe("marketplace", () => ToolStore.init());
+    safe("botones de la ventana", () => Chrome.init());
+    safe("botones principales", () => this.wireUI());
+    await safe("info", () => this.loadInfo());
+    await safe("estado", () => this.refreshStatus());
+    await safe("diagnóstico", () => this.checkDiagnostics());
     // refrescar RAM/CPU y estado de Ollama cada 5 s
-    setInterval(() => this.refreshStatus(), 5000);
+    setInterval(() => safe("estado", () => this.refreshStatus()), 5000);
   },
 
   // Aviso de primer uso: si falta Ollama o el modelo, lo explica en el chat.
@@ -62,7 +67,7 @@ const App = {
   wireUI() {
     // Nueva conversación: crea una sesión nueva (persistente)
     document.getElementById("newConv").addEventListener("click", () => {
-      if (window.Sessions) Sessions.newSession();
+      if ((typeof Sessions !== "undefined" && Sessions)) Sessions.newSession();
       else document.querySelectorAll(".msg").forEach((m, i) => { if (i > 0) m.remove(); });
     });
     // marked: abrir enlaces en pestaña nueva y no romper con HTML

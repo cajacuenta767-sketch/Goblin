@@ -31,7 +31,7 @@ const Chat = {
     this.el.typing.classList.toggle("show", on);
     this.el.progress.classList.toggle("active", on);
     this.el.sendBtn.style.opacity = on ? "0.5" : "1";
-    if (window.App && App.setThinking) App.setThinking(on);  // anima el goblin
+    if ((typeof App !== "undefined" && App) && App.setThinking) App.setThinking(on);  // anima el goblin
   },
 
   // Renderiza Markdown de forma segura-ish y resalta código
@@ -81,8 +81,8 @@ const Chat = {
       this.addMessage("ai", resp.content, resp.model);
       this.setBusy(false);
       Explorer.refresh();            // por si la IA cambió archivos
-      if (window.Sessions) Sessions.refresh();   // actualizar sidebar
-      if (window.Findings) Findings.refresh();   // por si registró hallazgos
+      if ((typeof Sessions !== "undefined" && Sessions)) Sessions.refresh();   // actualizar sidebar
+      if ((typeof Findings !== "undefined" && Findings)) Findings.refresh();   // por si registró hallazgos
     }
   },
 
@@ -145,8 +145,8 @@ const Chat = {
           bubble && bubble.querySelectorAll("pre code").forEach((b) => { try { hljs.highlightElement(b); } catch {} });
           this.setBusy(false);
           Explorer.refresh();
-          if (window.Sessions) Sessions.refresh();
-          if (window.Findings) Findings.refresh();
+          if ((typeof Sessions !== "undefined" && Sessions)) Sessions.refresh();
+          if ((typeof Findings !== "undefined" && Findings)) Findings.refresh();
           return true;
         }
       }

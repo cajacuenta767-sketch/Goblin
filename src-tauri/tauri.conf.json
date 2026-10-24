@@ -10,6 +10,7 @@
   "app": {
     "windows": [
       {
+        "label": "main",
         "title": "GOBLIN",
         "width": 1400,
         "height": 900,
@@ -22,11 +23,15 @@
     ],
     "security": {
       "csp": null
-    }
+    },
+    "withGlobalTauri": true
   },
   "bundle": {
     "active": true,
-    "targets": ["deb", "appimage"],
+    "targets": [
+      "deb",
+      "appimage"
+    ],
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
@@ -38,7 +43,12 @@
     "longDescription": "GOBLIN es un IDE de escritorio local con IA agentica para pentesting, con control del sistema y un modelo local sin censura via Ollama.",
     "linux": {
       "deb": {
-        "depends": ["python3", "python3-venv", "libwebkit2gtk-4.1-0", "libgtk-3-0"]
+        "depends": [
+          "python3",
+          "python3-venv",
+          "libwebkit2gtk-4.1-0",
+          "libgtk-3-0"
+        ]
       }
     }
   }
