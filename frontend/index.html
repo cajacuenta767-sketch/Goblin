@@ -37,6 +37,7 @@
         <div class="icons">☰ ← → ⌕</div>
       </div>
       <div class="newconv" id="newConv">＋ New Conversation</div>
+      <div class="navitem" id="toolstoreBtn">🧰 Herramientas</div>
       <div class="navitem">◷ Conversation History</div>
       <div class="navitem">⚙ Automations</div>
       <div class="navitem">✎ Customizations</div>
@@ -132,6 +133,18 @@
     </aside>
   </div>
 
+  <!-- Marketplace de herramientas de ciberseguridad -->
+  <div id="toolstore">
+    <div class="ts-panel">
+      <div class="ts-header">
+        <span class="ts-title">🧰 Herramientas de ciberseguridad</span>
+        <span class="ts-close" id="tsClose">✕</span>
+      </div>
+      <div class="ts-filters" id="tsFilters"></div>
+      <div class="ts-grid" id="tsGrid"></div>
+    </div>
+  </div>
+
   <!-- Barra de estado inferior -->
   <div id="statusbar">
     <span class="item"><span id="stOllama">●</span> <span id="stOllamaText">Ollama</span></span>
@@ -150,6 +163,8 @@
   <script src="js/voice.js"></script>
   <script src="js/sessions.js"></script>
   <script src="js/findings.js"></script>
+  <script src="assets/tool-icons.js"></script>
+  <script src="js/toolstore.js"></script>
   <script src="js/main.js"></script>
 </body>
 </html>

@@ -166,6 +166,23 @@ def level_set(body: LevelIn):
     return {"level": approvals.set_level(body.session_id, body.level)}
 
 
+# ---------- Marketplace de herramientas (Spec 016) ----------
+class InstallIn(BaseModel):
+    tool_id: str
+
+
+@app.get("/api/toolstore")
+def toolstore_list():
+    import toolstore
+    return {"tools": toolstore.catalog(), "categories": toolstore.CATEGORIES}
+
+
+@app.post("/api/toolstore/install")
+def toolstore_install(body: InstallIn):
+    import toolstore
+    return toolstore.install(body.tool_id)
+
+
 @app.get("/api/target")
 def get_target():
     return {"target": state.get_target()}

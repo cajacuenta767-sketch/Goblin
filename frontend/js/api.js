@@ -59,6 +59,10 @@ const API = {
   mode(sid) { return this._get("/api/mode?session_id=" + encodeURIComponent(sid)); },
   setMode(sid, mode) { return this._post("/api/mode", { session_id: sid, mode }); },
 
+  // Marketplace de herramientas
+  toolstore() { return this._get("/api/toolstore"); },
+  installTool(toolId) { return this._post("/api/toolstore/install", { tool_id: toolId }); },
+
   // Modelos instalados en Ollama
   models() { return this._get("/api/models"); },
 

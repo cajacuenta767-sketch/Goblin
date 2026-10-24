@@ -16,6 +16,7 @@ const App = {
     if (window.Voice) Voice.init();
     if (window.Sessions) Sessions.init();
     if (window.Findings) Findings.init();
+    if (window.ToolStore) ToolStore.init();
     this.wireUI();
     await this.loadInfo();
     await this.refreshStatus();
