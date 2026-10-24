@@ -9,9 +9,20 @@ GREEN='\033[0;32m'; YELLOW='\033[1;33m'; NC='\033[0m'
 info() { echo -e "${GREEN}[GOBLIN]${NC} $1"; }
 warn() { echo -e "${YELLOW}[GOBLIN]${NC} $1"; }
 
-info "Instalando dependencias de sistema para Tauri (GTK/WebKit)..."
-if command -v apt >/dev/null 2>&1; then
+info "Comprobando dependencias de sistema para Tauri (GTK/WebKit)..."
+if pkg-config --exists webkit2gtk-4.1 gtk+-3.0 openssl ayatana-appindicator3-0.1 librsvg-2.0 dbus-1 2>/dev/null; then
+  info "Dependencias de sistema ya instaladas."
+elif command -v apt >/dev/null 2>&1; then
   sudo apt update -qq
+  sudo apt install -y -t echo-backports \
+    build-essential curl wget file \
+    libwebkit2gtk-4.1-dev \
+    libgtk-3-dev \
+    libssl-dev \
+    libayatana-appindicator3-dev \
+    librsvg2-dev \
+    libdbus-1-dev \
+    pkg-config 2>/dev/null || \
   sudo apt install -y \
     build-essential curl wget file \
     libwebkit2gtk-4.1-dev \
@@ -19,6 +30,7 @@ if command -v apt >/dev/null 2>&1; then
     libssl-dev \
     libayatana-appindicator3-dev \
     librsvg2-dev \
+    libdbus-1-dev \
     pkg-config
 else
   warn "No se encontró apt. Instala manualmente las libs de GTK/WebKit de Tauri."

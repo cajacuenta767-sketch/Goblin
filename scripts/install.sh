@@ -18,7 +18,9 @@ info "Instalando GOBLIN en: $ROOT"
 
 # --- 1. Dependencias base del sistema ---
 info "Instalando dependencias base (python3, venv, curl, git)..."
-if command -v apt >/dev/null 2>&1; then
+if command -v python3 >/dev/null 2>&1 && python3 -c 'import venv' >/dev/null 2>&1 && command -v curl >/dev/null 2>&1 && command -v git >/dev/null 2>&1; then
+  info "Dependencias del sistema ya instaladas."
+elif command -v apt >/dev/null 2>&1; then
   sudo apt update -qq
   sudo apt install -y python3 python3-venv python3-pip curl git
 else

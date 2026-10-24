@@ -1,3 +1,4 @@
 # Artefactos de compilación de Rust/Tauri (no se suben: son enormes y se regeneran)
 /target/
+/gen/
 Cargo.lock
