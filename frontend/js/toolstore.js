@@ -54,6 +54,13 @@ const ToolStore = {
     }
   },
 
+  // Icono de respaldo según categoría (cuando no hay logo oficial o no carga)
+  fallbackIcon(cat) {
+    const map = { recon: "search", web: "web", passwords: "key",
+      exploitation: "exploit", network: "net", wireless: "wifi" };
+    return toolIcon(map[cat] || "search");
+  },
+
   render() {
     const list = this.activeCategory === "all"
       ? this.tools
@@ -62,16 +69,29 @@ const ToolStore = {
     for (const t of list) {
       const card = document.createElement("div");
       card.className = "ts-card";
+      // Logo oficial en vivo; si no hay o falla, icono propio de la categoría.
+      const logoHtml = t.logo
+        ? `<img class="ts-logo" src="${t.logo}" alt="${t.name}" loading="lazy">`
+        : `<span class="ts-fallback">${this.fallbackIcon(t.category)}</span>`;
       card.innerHTML = `
-        <div class="ts-icon">${toolIcon(t.icon)}</div>
+        <div class="ts-icon">${logoHtml}</div>
         <div class="ts-info">
           <div class="ts-name">${t.name}</div>
           <div class="ts-desc"></div>
+          <a class="ts-source" href="${t.url}" target="_blank" rel="noopener">↗ Última versión oficial</a>
         </div>
-        <button class="ts-btn ${t.installed ? "installed" : ""}" ${t.installed ? "disabled" : ""}>
-          ${t.installed ? "✓ Instalada" : "Instalar"}
-        </button>`;
+        <div class="ts-actions">
+          <button class="ts-btn ${t.installed ? "installed" : ""}" ${t.installed ? "disabled" : ""}>
+            ${t.installed ? "✓ Instalada" : "Instalar (apt)"}
+          </button>
+          <a class="ts-dl" href="${t.url}" target="_blank" rel="noopener" title="Descargar de la fuente oficial">⬇ Descargar</a>
+        </div>`;
       card.querySelector(".ts-desc").textContent = t.desc;
+      // Si el logo oficial no carga, usar el icono propio
+      const img = card.querySelector(".ts-logo");
+      if (img) img.addEventListener("error", () => {
+        img.outerHTML = `<span class="ts-fallback">${this.fallbackIcon(t.category)}</span>`;
+      });
       const btn = card.querySelector(".ts-btn");
       if (!t.installed) btn.addEventListener("click", () => this.install(t, btn));
       this.el.grid.appendChild(card);
