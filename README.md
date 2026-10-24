@@ -43,9 +43,14 @@ que nada sale a la nube.
 
 ## Instalación (app nativa de escritorio)
 
+> **Importante:** clona el proyecto en `~/goblin` (tu carpeta home). La app nativa busca
+> ahí el backend que arranca al abrirse. Si lo pones en otra ruta, exporta
+> `GOBLIN_HOME=/ruta/al/proyecto` antes de abrir la app.
+
 ```bash
-git clone https://github.com/cajacuenta767-sketch/Goblin.git
-cd Goblin
+cd ~
+git clone https://github.com/cajacuenta767-sketch/goblin.git
+cd goblin
 chmod +x scripts/*.sh
 ./scripts/install.sh      # instala Ollama + deps + modelo (responde "s" a la app nativa)
 ./scripts/build.sh        # compila la app y genera el .deb
@@ -53,7 +58,12 @@ sudo dpkg -i src-tauri/target/release/bundle/deb/*.deb
 sudo apt -f install       # si faltan dependencias
 ```
 
-Luego busca **GOBLIN** en tu menú de aplicaciones. Se abre en su propia ventana.
+Luego busca **GOBLIN** en tu menú de aplicaciones. Se abre en su propia ventana, arranca
+el backend solo, y espera a que esté listo antes de mostrar la interfaz.
+
+> **¿Los botones no funcionan y "parece un HTML nomás"?** Es que el backend no arrancó.
+> Comprueba que el proyecto está en `~/goblin` y que corriste `./scripts/install.sh`
+> (crea el `.venv` que la app necesita). Para el modo navegador, usa `./scripts/run.sh`.
 
 ### Modo navegador (desarrollo)
 ```bash

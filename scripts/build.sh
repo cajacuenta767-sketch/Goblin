@@ -27,6 +27,15 @@ if [ ! -d .venv ]; then
   warn "Ejecuta ./scripts/install.sh antes de usar la app."
 fi
 
+# --- Aviso importante sobre la ubicación del proyecto ---
+ROOT_NAME="$(basename "$ROOT")"
+if [ "$ROOT_NAME" != "goblin" ] && [ "$ROOT_NAME" != "Goblin" ]; then
+  warn "El proyecto está en '$ROOT'."
+  warn "La app nativa busca el backend en: GOBLIN_HOME, la carpeta actual, o ~/goblin."
+  warn "Para que la app instalada funcione, el proyecto debe estar en ~/goblin,"
+  warn "o exporta GOBLIN_HOME=$ROOT antes de abrir la app."
+fi
+
 info "Compilando GOBLIN como app nativa (esto tarda varios minutos la primera vez)..."
 cargo tauri build
 
