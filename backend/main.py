@@ -60,6 +60,32 @@ def files(path: str = "."):
         return JSONResponse({"ok": False, "error": str(e)}, status_code=400)
 
 
+class FileContentIn(BaseModel):
+    path: str
+    content: str
+
+
+@app.get("/api/file")
+def file_read(path: str):
+    """Lee el contenido de un archivo para el editor (Spec 007)."""
+    from tools import read_file
+    try:
+        return {"ok": True, "content": read_file(path)}
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=400)
+
+
+@app.post("/api/file")
+def file_write(body: FileContentIn):
+    """Guarda el contenido editado en el archivo (Spec 007). Es una escritura directa
+    del usuario desde el editor, por eso no pasa por la aprobación del agente."""
+    from tools import write_file
+    try:
+        return {"ok": True, "result": write_file(body.path, body.content)}
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=400)
+
+
 @app.get("/api/models")
 def models():
     """Lista los modelos instalados en Ollama (para el selector)."""

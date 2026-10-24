@@ -64,11 +64,9 @@ const Explorer = {
     }
   },
 
-  async view(path) {
-    // Lee el archivo usando el chat? No: pedimos al endpoint de files no da contenido.
-    // Para v1 mostramos la ruta; la lectura de contenido llega con el editor (iteración futura).
-    this.el.view.classList.add("show");
-    this.el.view.textContent = "Archivo: " + path + "\n\n(La vista de contenido llega con el editor Monaco en la próxima iteración.)";
+  view(path) {
+    // Abre el archivo en el editor Monaco (Spec 007)
+    if (window.Editor) Editor.open(path);
   },
 
   refresh() { this.load(this.cwd); },

@@ -142,8 +142,17 @@ body {
 .ws-item { padding: 5px 14px; color: var(--text-dim); cursor: pointer; display: flex; align-items: center; gap: 8px; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ws-item:hover { background: var(--panel-2); color: var(--text); }
 .ws-item.dir { color: var(--text); }
-.ws-view { border-top: 1px solid var(--line); max-height: 45%; overflow: auto; padding: 10px 14px; font-family: var(--mono); font-size: 12px; white-space: pre-wrap; color: var(--text-dim); display: none; }
-.ws-view.show { display: block; }
+/* Editor Monaco (panel derecho, abajo) */
+#editorPanel { display: none; flex-direction: column; border-top: 1px solid var(--line); height: 55%; flex-shrink: 0; }
+#editorPanel.show { display: flex; }
+.editor-head { height: 30px; display: flex; align-items: center; padding: 0 12px; border-bottom: 1px solid var(--line); background: var(--panel-2); gap: 8px; }
+.editor-file { font-size: 12px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.editor-actions { margin-left: auto; display: flex; gap: 10px; }
+.editor-btn { font-size: 11px; color: var(--text-dim); cursor: pointer; }
+.editor-btn:hover { color: var(--accent); }
+#editorBody { flex: 1; min-height: 0; }
+#right { display: flex; flex-direction: column; }
+.ws-list { flex: 1; }
 
 /* --- Barra de estado inferior --- */
 #statusbar { height: 24px; background: var(--panel); border-top: 1px solid var(--line); display: flex; align-items: center; gap: 16px; padding: 0 12px; font-size: 11px; color: var(--text-dim); flex-shrink: 0; }

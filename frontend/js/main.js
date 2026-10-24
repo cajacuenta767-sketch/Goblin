@@ -10,6 +10,7 @@ const App = {
     await this.inlineLogos();   // mete el SVG del goblin inline para poder animarlo
     Chat.init();
     Approvals.init();
+    Editor.init();
     Explorer.init();
     Terminal_.init();
     this.wireUI();

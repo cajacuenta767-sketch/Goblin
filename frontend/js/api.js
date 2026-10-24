@@ -33,6 +33,28 @@ const API = {
     return this._get("/api/files?path=" + encodeURIComponent(path));
   },
 
+  // Lee el contenido de un archivo (editor)
+  readFile(path) {
+    return this._get("/api/file?path=" + encodeURIComponent(path));
+  },
+
+  // Guarda el contenido de un archivo (editor)
+  writeFile(path, content) {
+    return this._post("/api/file", { path, content });
+  },
+
+  // Sesiones (persistencia)
+  sessions() { return this._get("/api/sessions"); },
+  sessionMessages(sid) { return this._get("/api/sessions/" + encodeURIComponent(sid)); },
+  async deleteSession(sid) {
+    const r = await fetch("/api/sessions/" + encodeURIComponent(sid), { method: "DELETE" });
+    return r.json();
+  },
+
+  // Hallazgos e informe
+  findings(sid) { return this._get("/api/findings/" + encodeURIComponent(sid)); },
+  report(sid) { return this._get("/api/report/" + encodeURIComponent(sid)); },
+
   // Modelos instalados en Ollama
   models() { return this._get("/api/models"); },
 

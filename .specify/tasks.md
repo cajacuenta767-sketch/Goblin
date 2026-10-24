@@ -82,9 +82,16 @@
 - ✅ T006.4 — main.py: endpoints /api/findings, /api/report
 - ✅ T006.5 — Validado: la IA registra hallazgos y genera informe profesional
 
+## Spec 007 — Editor Monaco ✅
+
+- ✅ T007.1 — main.py: endpoints /api/file (leer y escribir contenido)
+- ✅ T007.2 — Monaco por CDN + panel de editor en el panel derecho
+- ✅ T007.3 — frontend/js/editor.js (abrir, editar, guardar con Ctrl+S, resaltado por lenguaje)
+- ✅ T007.4 — explorer.js: clic en archivo lo abre en el editor
+- ✅ T007.5 — Validado: leer/escribir archivos vía API funciona
+
 ## Próximas specs (aún sin escribir)
 
-- 007 — Editor Monaco (ver/editar archivos)
 - 008 — Router híbrido Gemini + DeepHat (Fase 2.5)
 - 009 — Dictado por voz (Whisper local, Fase 5)
 - 010 — Autoaprobación configurable por niveles
