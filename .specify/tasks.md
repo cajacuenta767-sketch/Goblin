@@ -69,6 +69,19 @@ Cada spec tiene su checklist sin marcar. No se marca hasta validarla en la PC.
 
 ---
 
+## Spec 026 — Marketplace: instalación por terminal y catálogo ampliado — 🟨
+
+- ✅ "Instalar" muestra el comando exacto en una confirmación dentro de la tarjeta (sin `confirm()`).
+- ✅ Confirmar escribe el comando en la terminal integrada; GOBLIN no recibe la contraseña de sudo.
+- ✅ "Descargar" y "↗" abren la web oficial desde el backend (`xdg-open`); IDs y URLs fuera del catálogo se rechazan.
+- ✅ Burp Suite (solo descarga) no muestra "Instalar"; los paquetes no comprobados llevan la etiqueta.
+- ✅ "↻ Actualizar" y catálogo de 67 herramientas en 10 categorías.
+- ✅ Pruebas: 61 de backend pasan (15 nuevas del marketplace); E2E en Chromium 21/21.
+- ⬜ PC: instalar una herramienta desde la app nativa y comprobar que "Descargar" abre la web oficial.
+- ⬜ Verificar en Parrot los paquetes marcados "pkg sin verificar" (ver Spec 026, Límites).
+
+---
+
 ## Infraestructura (transversal) — ✅
 
 - ✅ `scripts/install.sh`, `run.sh`, `build.sh`, `install-nativo.sh`, `subir-github.sh`.

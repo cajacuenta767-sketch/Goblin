@@ -63,6 +63,19 @@ const Terminal_ = {
     });
   },
 
+  // Escribe un comando en la terminal y la abre si estaba cerrada (Spec 026).
+  // Lo ejecuta el shell del usuario: sudo le pide su contraseña ahí, no en GOBLIN.
+  async runCommand(cmd) {
+    if (!this.open) this.toggle();
+    for (let i = 0; i < 30 && !(this.ws && this.ws.readyState === WebSocket.OPEN); i++) {
+      await new Promise((r) => setTimeout(r, 100));
+    }
+    if (!this.ws || this.ws.readyState !== WebSocket.OPEN) return false;
+    this.ws.send(cmd + "\r");
+    if (this.term) this.term.focus();
+    return true;
+  },
+
   sendResize() {
     if (this.term && this.ws && this.ws.readyState === WebSocket.OPEN) {
       const { rows, cols } = this.term;

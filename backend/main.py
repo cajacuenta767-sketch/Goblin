@@ -190,7 +190,7 @@ def level_set(body: LevelIn):
 
 
 # ---------- Marketplace de herramientas (Spec 016) ----------
-class InstallIn(BaseModel):
+class ToolIn(BaseModel):
     tool_id: str
 
 
@@ -201,9 +201,17 @@ def toolstore_list():
 
 
 @app.post("/api/toolstore/install")
-def toolstore_install(body: InstallIn):
+def toolstore_install(body: ToolIn):
+    """Prepara la instalación (Spec 026): devuelve el comando; la UI lo escribe en la terminal."""
     import toolstore
     return toolstore.install(body.tool_id)
+
+
+@app.post("/api/toolstore/open")
+def toolstore_open(body: ToolIn):
+    """Abre la web oficial de una herramienta del catálogo en el navegador (Spec 026)."""
+    import toolstore
+    return toolstore.open_url(body.tool_id)
 
 
 @app.get("/api/target")

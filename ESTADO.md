@@ -94,6 +94,8 @@ set_target, clear_target, get_target, get_snippet.
 La lista viva de tareas y el backlog priorizado están en `.specify/tasks.md`.
 Resumen al 2026-10-24: 024 (Detener) y 025 (guardas de privacidad y autorización) implementadas
 y validadas en el entorno; 022, 023 y 025 (Gemini real) esperan prueba en la PC del usuario.
+Spec 026 (marketplace: instalar por la terminal, abrir la web oficial por el sistema, catálogo de
+67 herramientas) implementada y probada en el navegador; falta probarla en la app nativa del PC.
 
 ---
 

@@ -191,7 +191,7 @@ body {
 .ts-filter { padding: 4px 12px; border-radius: 14px; background: var(--panel-2); border: 1px solid var(--line); color: var(--text-dim); cursor: pointer; font-size: 12px; }
 .ts-filter.active { background: var(--accent-dim); color: #d6ffe8; border-color: var(--accent-dim); }
 .ts-grid { flex: 1; overflow-y: auto; padding: 16px 18px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; align-content: start; }
-.ts-card { display: flex; align-items: flex-start; gap: 12px; padding: 14px; background: var(--panel-2); border: 1px solid var(--line); border-radius: 10px; }
+.ts-card { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 12px; padding: 14px; background: var(--panel-2); border: 1px solid var(--line); border-radius: 10px; }
 .ts-card:hover { border-color: var(--accent-dim); }
 .ts-icon { width: 40px; height: 40px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: #fff; border-radius: 8px; overflow: hidden; }
 .ts-icon .ts-logo { width: 100%; height: 100%; object-fit: contain; padding: 4px; }
@@ -209,6 +209,24 @@ body {
 .ts-dl { padding: 5px 12px; border: 1px solid var(--line); border-radius: 6px; color: var(--text-dim); font-size: 11px; text-decoration: none; text-align: center; white-space: nowrap; }
 .ts-dl:hover { border-color: var(--accent-dim); color: var(--accent); }
 .ts-empty { grid-column: 1/-1; color: var(--text-faint); text-align: center; padding: 30px; }
+/* Spec 026: actualizar, etiquetas, confirmación en línea y mensajes dentro de la tarjeta */
+.ts-header .ts-refresh { margin-left: auto; margin-right: 14px; font-size: 12px; color: var(--text-dim); cursor: pointer; white-space: nowrap; }
+.ts-header .ts-refresh:hover { color: var(--accent); }
+.ts-header .ts-close { margin-left: 0; }
+.ts-badge { display: inline-block; margin-left: 6px; padding: 0 6px; border: 1px solid #e0a030; border-radius: 8px; color: #e0a030; font-size: 9px; font-weight: 500; vertical-align: middle; }
+.ts-manual { font-size: 10px; color: var(--text-faint); text-align: center; padding: 4px 0; }
+.ts-confirm { font-size: 10px; color: var(--text-dim); line-height: 1.4; background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 8px; }
+.ts-card > .ts-confirm, .ts-card > .ts-msg { flex-basis: 100%; }
+.ts-confirm[hidden] { display: none; }
+.ts-confirm code { display: block; margin: 4px 0; color: var(--accent); word-break: break-all; font-size: 10px; }
+.ts-confirm-row { display: flex; gap: 6px; margin-top: 6px; }
+.ts-btn.ghost { background: transparent; color: var(--text-dim); border-color: var(--line); }
+.ts-btn:disabled:not(.installed) { opacity: 0.6; cursor: default; }
+button.ts-dl { background: none; cursor: pointer; font: inherit; font-size: 11px; }
+.ts-msg { font-size: 10px; color: var(--text-dim); word-break: break-word; line-height: 1.4; }
+.ts-msg:empty { display: none; }
+.ts-msg.ok { color: var(--accent); }
+.ts-msg.err { color: var(--red); }
 
 /* scrollbars */
 ::-webkit-scrollbar { width: 9px; height: 9px; }

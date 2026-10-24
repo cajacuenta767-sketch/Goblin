@@ -65,6 +65,8 @@ const API = {
   // Marketplace de herramientas
   toolstore() { return this._get("/api/toolstore"); },
   installTool(toolId) { return this._post("/api/toolstore/install", { tool_id: toolId }); },
+  // Abre la web oficial de la herramienta en el navegador del sistema (Spec 026)
+  openUrl(toolId) { return this._post("/api/toolstore/open", { tool_id: toolId }); },
 
   // Modelos instalados en Ollama
   models() { return this._get("/api/models"); },
