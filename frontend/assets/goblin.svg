@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100" role="img" aria-label="GOBLIN">
+  <!-- Logo GOBLIN animado: parpadea y mueve las orejas cuando la clase .thinking está activa -->
+  <style>
+    .ear { transform-origin: 50px 45px; }
+    .thinking .ear-l { animation: wiggleL 1.2s ease-in-out infinite; }
+    .thinking .ear-r { animation: wiggleR 1.2s ease-in-out infinite; }
+    .eyelid { transform: scaleY(0); transform-origin: center; transform-box: fill-box; }
+    .thinking .eyelid { animation: blink 2.4s ease-in-out infinite; }
+    @keyframes wiggleL { 0%,100%{transform:rotate(0)} 50%{transform:rotate(-8deg)} }
+    @keyframes wiggleR { 0%,100%{transform:rotate(0)} 50%{transform:rotate(8deg)} }
+    @keyframes blink { 0%,90%,100%{transform:scaleY(0)} 94%{transform:scaleY(1)} }
+  </style>
+  <!-- orejas -->
+  <path class="ear ear-l" d="M29 45 Q7 21 32 43 Z" fill="#3ddc84"/>
+  <path class="ear ear-r" d="M71 45 Q93 21 68 43 Z" fill="#3ddc84"/>
+  <!-- cabeza -->
+  <ellipse cx="50" cy="56" rx="30" ry="31" fill="#3ddc84"/>
+  <!-- mejillas -->
+  <ellipse cx="34" cy="64" rx="6" ry="4" fill="#2fae68" opacity="0.5"/>
+  <ellipse cx="66" cy="64" rx="6" ry="4" fill="#2fae68" opacity="0.5"/>
+  <!-- cejas -->
+  <path d="M29 42 Q37 39 43 44" fill="none" stroke="#1f6e44" stroke-width="2.4" stroke-linecap="round"/>
+  <path d="M71 42 Q63 39 57 44" fill="none" stroke="#1f6e44" stroke-width="2.4" stroke-linecap="round"/>
+  <!-- ojos -->
+  <g>
+    <ellipse cx="38" cy="51" rx="6.5" ry="8" fill="#0d0d0f"/>
+    <circle cx="40" cy="48" r="2.2" fill="#eafff3"/>
+    <rect class="eyelid" x="31.5" y="43" width="13" height="16" rx="6.5" fill="#3ddc84"/>
+  </g>
+  <g>
+    <ellipse cx="62" cy="51" rx="6.5" ry="8" fill="#0d0d0f"/>
+    <circle cx="64" cy="48" r="2.2" fill="#eafff3"/>
+    <rect class="eyelid" x="55.5" y="43" width="13" height="16" rx="6.5" fill="#3ddc84"/>
+  </g>
+  <!-- nariz -->
+  <path d="M50 54 Q56 64 48 70 Q45 66 47 60 Z" fill="#1f6e44"/>
+  <!-- sonrisa dentona -->
+  <path d="M35 72 Q50 85 65 72" fill="none" stroke="#0d0d0f" stroke-width="2.6" stroke-linecap="round"/>
+  <path d="M43 76 L45 82 L47 76 Z" fill="#0d0d0f"/>
+  <path d="M53 76 L55 82 L57 76 Z" fill="#0d0d0f"/>
+</svg>

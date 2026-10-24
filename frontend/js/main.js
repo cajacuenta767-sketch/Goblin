@@ -7,6 +7,7 @@ window.GOBLIN = {
 
 const App = {
   async init() {
+    await this.inlineLogos();   // mete el SVG del goblin inline para poder animarlo
     Chat.init();
     Approvals.init();
     Explorer.init();
@@ -15,6 +16,26 @@ const App = {
     await this.refreshStatus();
     // refrescar RAM/CPU y estado de Ollama cada 5 s
     setInterval(() => this.refreshStatus(), 5000);
+  },
+
+  // Reemplaza los <img> del logo por el SVG inline (así la animación por clase funciona)
+  async inlineLogos() {
+    try {
+      const svg = await (await fetch("assets/goblin.svg")).text();
+      document.querySelectorAll("#brandLogo, #sidebarLogo").forEach((img) => {
+        const wrap = document.createElement("span");
+        wrap.className = img.className + " goblin-logo";
+        wrap.innerHTML = svg;
+        img.replaceWith(wrap);
+      });
+    } catch { /* si falla, se quedan los <img> normales */ }
+  },
+
+  // Activa/desactiva la animación del goblin (parpadeo + orejas)
+  setThinking(on) {
+    document.querySelectorAll(".goblin-logo svg").forEach((s) => {
+      s.classList.toggle("thinking", on);
+    });
   },
 
   wireUI() {

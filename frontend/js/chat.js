@@ -31,6 +31,7 @@ const Chat = {
     this.el.typing.classList.toggle("show", on);
     this.el.progress.classList.toggle("active", on);
     this.el.sendBtn.style.opacity = on ? "0.5" : "1";
+    if (window.App && App.setThinking) App.setThinking(on);  // anima el goblin
   },
 
   // Renderiza Markdown de forma segura-ish y resalta código
