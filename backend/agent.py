@@ -9,7 +9,10 @@ Diseño del bucle:
   El frontend muestra la caja de aprobación; al responder, se llama a approve().
 - Hay un tope de pasos (MAX_STEPS) para evitar bucles infinitos de un modelo 7B.
 """
+import json
+
 import config
+import db
 from ollama import Client
 from tools import SCHEMAS, NEEDS_APPROVAL, run_tool
 
@@ -53,14 +56,20 @@ def _call_model(s: dict):
     )
 
 
-def _exec(call) -> dict:
+def _exec(call, sid: str | None = None, approved: bool = True) -> dict:
     name = call.function.name
     args = dict(call.function.arguments or {})
     result = run_tool(name, args)
+    # Log de auditoría (Fase 8): qué herramienta se ejecutó, cuándo, resultado.
+    if sid:
+        try:
+            db.log_action(sid, name, json.dumps(args, ensure_ascii=False), result, approved)
+        except Exception:
+            pass
     return {"name": name, "args": args, "result": result}
 
 
-def _step(s: dict) -> dict:
+def _step(s: dict, sid: str | None = None) -> dict:
     """Avanza el agente hasta texto final, una aprobación pendiente, o el tope de pasos."""
     while True:
         # 1) ¿Hay herramientas en cola por ejecutar?
@@ -76,7 +85,7 @@ def _step(s: dict) -> dict:
                 }
             # Herramienta segura: ejecutar sin preguntar
             s["queue"].pop(0)
-            done = _exec(call)
+            done = _exec(call, sid, approved=True)
             s["messages"].append({"role": "tool", "content": done["result"], "tool_name": name})
             continue
 
@@ -99,15 +108,36 @@ def _step(s: dict) -> dict:
 
         if not msg.tool_calls:
             s["steps"] = 0
+            # Guardar la respuesta final de la IA en la base de datos.
+            if sid and (msg.content or ""):
+                try:
+                    db.add_message(sid, "assistant", msg.content or "", s["model"])
+                except Exception:
+                    pass
             return {"type": "text", "content": msg.content or "", "model": s["model"]}
         s["queue"] = list(msg.tool_calls)
 
 
 def user_message(sid: str, text: str, model: str | None = None) -> dict:
     s = get_session(sid, model)
+    # Las herramientas de pentest guardan en esta sesión.
+    try:
+        from tools import pentest
+        pentest.set_session(sid)
+    except Exception:
+        pass
     s["messages"].append({"role": "user", "content": text})
     s["steps"] = 0
-    return _step(s)
+    # Persistencia: asegurar sesión, guardar el mensaje, poner título si es el primero.
+    try:
+        db.ensure_session(sid, s["model"])
+        existing = db.get_messages(sid)
+        db.add_message(sid, "user", text, None)
+        if not existing:
+            db.set_title(sid, text[:60])
+    except Exception:
+        pass
+    return _step(s, sid)
 
 
 def approve(sid: str, approved: bool) -> dict:
@@ -118,12 +148,17 @@ def approve(sid: str, approved: bool) -> dict:
     call = s["queue"].pop(0)
     name = call.function.name
     if approved:
-        done = _exec(call)
+        done = _exec(call, sid, approved=True)
         result = done["result"]
     else:
         result = "El usuario DENEGÓ esta acción. No la ejecutes; propón una alternativa si aplica."
+        try:
+            db.log_action(sid, name, json.dumps(dict(call.function.arguments or {}), ensure_ascii=False),
+                          result, approved=False)
+        except Exception:
+            pass
     s["messages"].append({"role": "tool", "content": result, "tool_name": name})
-    return _step(s)
+    return _step(s, sid)
 
 
 def reset_session(sid: str) -> None:

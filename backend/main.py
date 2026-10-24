@@ -15,12 +15,14 @@ import config
 import agent
 import state
 import terminal
+import db
 from tools import list_dir
 
 FRONTEND = Path(__file__).resolve().parent.parent / "frontend"
 ollama_client = Client(host=config.OLLAMA_HOST)
 
 app = FastAPI(title="GOBLIN")
+db.init()   # crea las tablas de SQLite si no existen
 
 
 # ---------- Modelos de petición ----------
@@ -65,6 +67,36 @@ def models():
         return {"ok": True, "models": [m.model for m in ollama_client.list().models]}
     except Exception as e:
         return {"ok": False, "models": [], "error": str(e)}
+
+
+# ---------- Sesiones (Spec 005) ----------
+@app.get("/api/sessions")
+def sessions_list():
+    return {"sessions": db.list_sessions()}
+
+
+@app.get("/api/sessions/{sid}")
+def session_get(sid: str):
+    return {"messages": db.get_messages(sid)}
+
+
+@app.delete("/api/sessions/{sid}")
+def session_delete(sid: str):
+    db.delete_session(sid)
+    agent.reset_session(sid)
+    return {"ok": True}
+
+
+# ---------- Hallazgos e informe (Spec 006) ----------
+@app.get("/api/findings/{sid}")
+def findings_list(sid: str):
+    return {"findings": db.list_findings(sid)}
+
+
+@app.get("/api/report/{sid}")
+def report_get(sid: str):
+    import report
+    return {"report": report.generate(sid)}
 
 
 @app.get("/api/target")

@@ -5,6 +5,7 @@ requieren aprobación del usuario antes de ejecutarse.
 """
 from . import filesystem as fs
 from . import shell as sh
+from . import pentest as pt
 
 TOOLS = {
     "list_dir": fs.list_dir,
@@ -17,9 +18,12 @@ TOOLS = {
     "search_files": fs.search_files,
     "disk_usage": fs.disk_usage,
     "run_shell": sh.run_shell,
+    "add_finding": pt.add_finding,
+    "generate_report": pt.generate_report,
 }
 
 # Herramientas que modifican/ejecutan: requieren aprobación del usuario.
+# add_finding y generate_report NO requieren aprobación (solo registran/leen datos).
 NEEDS_APPROVAL = {
     "write_file", "make_dir", "move_path", "copy_path", "delete_path", "run_shell",
 }
@@ -77,4 +81,18 @@ SCHEMAS = [
     _t("run_shell", "Ejecuta un comando de shell en Linux y devuelve su salida.",
        {"command": {"type": S}, "cwd": {"type": S, "description": "Carpeta de ejecución"}},
        ["command"]),
+    _t("add_finding",
+       "Registra un hallazgo de seguridad encontrado durante el pentest. Úsalo cuando "
+       "descubras una vulnerabilidad, mala configuración o dato relevante.",
+       {"severity": {"type": S, "description": "critical, high, medium, low o info"},
+        "title": {"type": S, "description": "Nombre corto del hallazgo"},
+        "host": {"type": S, "description": "IP o host afectado"},
+        "port": {"type": S, "description": "Puerto/servicio"},
+        "description": {"type": S, "description": "Explicación del hallazgo"},
+        "evidence": {"type": S, "description": "Evidencia o salida que lo prueba"}},
+       ["severity", "title"]),
+    _t("generate_report",
+       "Genera el informe de pentest en Markdown con todos los hallazgos registrados "
+       "en esta sesión. Úsalo cuando el usuario pida el reporte.",
+       {}, []),
 ]

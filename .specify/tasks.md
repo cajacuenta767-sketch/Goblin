@@ -66,11 +66,26 @@
 - ✅ T004.5 — CSS del panel de terminal + botón "Terminal" en el input
 - ✅ T004.6 — Validado end-to-end: cd y variables persisten (shell real viva)
 
+## Spec 005 — Persistencia (SQLite) ✅
+
+- ✅ T005.1 — backend/db.py (SQLite stdlib: sesiones, mensajes, findings, auditoría)
+- ✅ T005.2 — agent.py guarda mensajes + log de auditoría de cada acción
+- ✅ T005.3 — main.py: endpoints /api/sessions (listar/abrir/borrar)
+- ✅ T005.4 — Resuelto conflicto: eliminada carpeta db/ vacía que tapaba db.py
+- ✅ T005.5 — Validado: mensajes/sesiones/auditoría persisten y se borran
+
+## Spec 006 — Hallazgos e informe de pentest ✅
+
+- ✅ T006.1 — backend/report.py (informe Markdown: resumen, tabla, detalle, anexo auditoría)
+- ✅ T006.2 — backend/tools/pentest.py (herramientas add_finding, generate_report)
+- ✅ T006.3 — registry.py: registradas las 2 herramientas nuevas + schemas
+- ✅ T006.4 — main.py: endpoints /api/findings, /api/report
+- ✅ T006.5 — Validado: la IA registra hallazgos y genera informe profesional
+
 ## Próximas specs (aún sin escribir)
 
-- 005 — Persistencia (SQLite: sesiones, mensajes)
-- 006 — Hallazgos e informe de pentest (Fase 8)
 - 007 — Editor Monaco (ver/editar archivos)
 - 008 — Router híbrido Gemini + DeepHat (Fase 2.5)
 - 009 — Dictado por voz (Whisper local, Fase 5)
 - 010 — Autoaprobación configurable por niveles
+- Frontend: panel de hallazgos + sidebar de sesiones reales (pendiente de cablear en UI)
