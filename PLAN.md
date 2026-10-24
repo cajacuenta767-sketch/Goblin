@@ -11,7 +11,8 @@
 - **Backend:** Python 3.11+ · FastAPI · Ollama
 - **Frontend:** HTML/CSS/JS (luego migrable a React + Vite)
 - 🔵 **Arquitectura de modelos: HÍBRIDA.** Gemini (nube) orquesta y responde rápido; **DeepHat-V1-7B** (local) entra cuando Gemini se niega por censura o cuando hay datos sensibles del objetivo.
-- **Estado del documento:** v1.1 — vivo, se va actualizando por fases
+- **Estado del documento:** v1.2 — vivo, se va actualizando por fases
+- 🔵 **Metodología: SDD (Spec-Driven Development).** El proyecto se construye desde especificaciones: constitución → spec → plan → tareas → implementación → validación. Ver `.specify/` y `AGENTS.md`.
 - 🔵 **Perfil del usuario:** ingeniero de ciberseguridad → proyecto enfocado 100% en pentesting
 - 🔵 **Hardware objetivo real:** i7-10700 (8C/16H) · 16 GB RAM · **sin GPU dedicada** (solo CPU) → ver §8
 
