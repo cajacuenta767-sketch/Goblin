@@ -55,6 +55,10 @@ const API = {
   findings(sid) { return this._get("/api/findings/" + encodeURIComponent(sid)); },
   report(sid) { return this._get("/api/report/" + encodeURIComponent(sid)); },
 
+  // Modo del router (local / hybrid / manual)
+  mode(sid) { return this._get("/api/mode?session_id=" + encodeURIComponent(sid)); },
+  setMode(sid, mode) { return this._post("/api/mode", { session_id: sid, mode }); },
+
   // Modelos instalados en Ollama
   models() { return this._get("/api/models"); },
 

@@ -49,6 +49,27 @@ const App = {
     if (window.marked) {
       marked.setOptions({ breaks: true, gfm: true });
     }
+    // Selector de modo (Local → Híbrido → Manual) al hacer clic en el chip
+    const modeChip = document.getElementById("modeChip");
+    if (modeChip) {
+      const modes = [
+        { key: "local",  label: "◈ Local" },
+        { key: "hybrid", label: "◈ Híbrido" },
+        { key: "manual", label: "◈ Manual" },
+      ];
+      let idx = 0;
+      modeChip.addEventListener("click", async () => {
+        idx = (idx + 1) % modes.length;
+        const m = modes[idx];
+        try {
+          const r = await API.setMode(Chat.sessionId, m.key);
+          modeChip.textContent = m.label + " ▾";
+          document.getElementById("stMode").textContent = m.label.replace("◈ ", "");
+          window.GOBLIN.mode = m.key;
+          if (r.warning) Chat.addMessage("ai", "⚠️ " + r.warning, "DeepHat");
+        } catch { /* silencioso */ }
+      });
+    }
   },
 
   async loadInfo() {

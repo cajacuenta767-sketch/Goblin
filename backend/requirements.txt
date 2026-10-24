@@ -20,7 +20,10 @@ python-dotenv==1.*
 # Info del sistema (RAM/CPU para la barra de estado)
 psutil==6.*
 
+# --- Opcional: router híbrido con Gemini (Spec 008) ---
+# Descomenta e instala SOLO si quieres usar el modo híbrido con Gemini.
+# Requiere además poner GEMINI_API_KEY en tu .env.
+# google-generativeai==0.8.*
+
 # --- Fases posteriores (comentadas hasta que toque) ---
-# ptyprocess==0.7.*          # terminal real (Fase 3)
-# faster-whisper==1.*        # dictado por voz (Fase 5)
-# google-generativeai==0.8.* # Gemini (Fase 2.5)
+# faster-whisper==1.*        # dictado por voz (Spec 009)

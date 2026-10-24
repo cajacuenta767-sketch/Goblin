@@ -90,9 +90,19 @@
 - ✅ T007.4 — explorer.js: clic en archivo lo abre en el editor
 - ✅ T007.5 — Validado: leer/escribir archivos vía API funciona
 
+## Spec 008 — Router híbrido (Gemini + DeepHat) ✅
+
+- ✅ T008.1 — backend/router.py (modos local/hybrid/manual, detección de negativa)
+- ✅ T008.2 — backend/core/llm/gemini_client.py (cliente Gemini con tools, falla limpio)
+- ✅ T008.3 — agent.py: _call_model aplica el router (Gemini → fallback DeepHat)
+- ✅ T008.4 — config.py: GEMINI_API_KEY, GEMINI_MODEL
+- ✅ T008.5 — main.py: endpoints /api/mode (get/set)
+- ✅ T008.6 — frontend: chip de modo (Local/Híbrido/Manual) + aviso sin API key
+- ✅ T008.7 — Validado: modo por defecto local, híbrido sin key avisa y usa DeepHat
+- ⬜ T008.8 — Probar Gemini real con API key (requiere key del usuario)
+
 ## Próximas specs (aún sin escribir)
 
-- 008 — Router híbrido Gemini + DeepHat (Fase 2.5)
 - 009 — Dictado por voz (Whisper local, Fase 5)
 - 010 — Autoaprobación configurable por niveles
 - Frontend: panel de hallazgos + sidebar de sesiones reales (pendiente de cablear en UI)

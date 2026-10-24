@@ -32,6 +32,10 @@ FULL_ACCESS = os.getenv("GOBLIN_FULL_ACCESS", "true").lower() == "true"
 MAX_STEPS = int(os.getenv("GOBLIN_MAX_STEPS", "15"))    # tope de iteraciones (evita bucles)
 SHELL_TIMEOUT = int(os.getenv("GOBLIN_SHELL_TIMEOUT", "180"))  # segundos por comando
 
+# --- Router híbrido / Gemini (Spec 008, opcional) ---
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "").strip()
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-1.5-flash")
+
 # --- Estado hacia la Polybar (Fase 9) ---
 # GOBLIN escribe aquí el target actual; el módulo de Polybar lo lee.
 STATE_DIR = Path(os.getenv("GOBLIN_STATE_DIR", "~/.cache/goblin")).expanduser()

@@ -10,11 +10,17 @@ Diseño del bucle:
 - Hay un tope de pasos (MAX_STEPS) para evitar bucles infinitos de un modelo 7B.
 """
 import json
+import sys
+import os
 
 import config
 import db
+import router
 from ollama import Client
 from tools import SCHEMAS, NEEDS_APPROVAL, run_tool
+
+# Permite importar el cliente de Gemini desde core/llm/
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "core", "llm"))
 
 client = Client(host=config.OLLAMA_HOST)
 
@@ -46,14 +52,43 @@ def get_session(sid: str, model: str | None = None) -> dict:
     return sessions[sid]
 
 
-def _call_model(s: dict):
-    return client.chat(
+def _call_deephat(s: dict):
+    """Llama al modelo local (DeepHat) vía Ollama."""
+    resp = client.chat(
         model=s["model"],
         messages=s["messages"],
         tools=SCHEMAS,
         options={"num_ctx": config.NUM_CTX},
         keep_alive=config.KEEP_ALIVE,
     )
+    resp._goblin_model = "DeepHat"
+    return resp
+
+
+def _call_model(s: dict, sid: str | None = None):
+    """Aplica el router híbrido: elige modelo según el modo de la sesión.
+    - local  -> DeepHat
+    - hybrid -> Gemini primero; si se niega o falla, DeepHat
+    - manual -> el modelo que el frontend ya fijó en s["model"] (DeepHat por defecto)
+    """
+    mode = router.get_mode(sid) if sid else "local"
+
+    if mode == "hybrid" and router.gemini_available():
+        try:
+            import gemini_client
+            resp = gemini_client.chat(s["messages"], SCHEMAS)
+            # ¿Gemini se negó? Caer a DeepHat.
+            if not resp.message.tool_calls and router.looks_like_refusal(resp.message.content):
+                resp = _call_deephat(s)
+            else:
+                resp._goblin_model = "Gemini"
+            return resp
+        except Exception:
+            # Cualquier fallo de Gemini → respaldo local, sin romper.
+            return _call_deephat(s)
+
+    # local, manual, o híbrido sin API key → DeepHat
+    return _call_deephat(s)
 
 
 def _exec(call, sid: str | None = None, approved: bool = True) -> dict:
@@ -97,13 +132,14 @@ def _step(s: dict, sid: str | None = None) -> dict:
                                                "Pídeme que continúe si hace falta.]",
                     "model": s["model"]}
 
-        # 3) Preguntar al modelo
+        # 3) Preguntar al modelo (router híbrido decide cuál)
         try:
-            resp = _call_model(s)
+            resp = _call_model(s, sid)
         except Exception as e:
-            return {"type": "error", "content": f"Error al contactar el modelo ({s['model']}): {e}. "
+            return {"type": "error", "content": f"Error al contactar el modelo: {e}. "
                                                f"¿Está Ollama corriendo y el modelo descargado?"}
         msg = resp.message
+        used_model = getattr(resp, "_goblin_model", "DeepHat")
         s["messages"].append(msg)
 
         if not msg.tool_calls:
@@ -111,10 +147,10 @@ def _step(s: dict, sid: str | None = None) -> dict:
             # Guardar la respuesta final de la IA en la base de datos.
             if sid and (msg.content or ""):
                 try:
-                    db.add_message(sid, "assistant", msg.content or "", s["model"])
+                    db.add_message(sid, "assistant", msg.content or "", used_model)
                 except Exception:
                     pass
-            return {"type": "text", "content": msg.content or "", "model": s["model"]}
+            return {"type": "text", "content": msg.content or "", "model": used_model}
         s["queue"] = list(msg.tool_calls)
 
 

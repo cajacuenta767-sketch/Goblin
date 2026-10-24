@@ -125,6 +125,29 @@ def report_get(sid: str):
     return {"report": report.generate(sid)}
 
 
+# ---------- Router híbrido / modo (Spec 008) ----------
+class ModeIn(BaseModel):
+    session_id: str = "main"
+    mode: str  # local / hybrid / manual
+
+
+@app.get("/api/mode")
+def mode_get(session_id: str = "main"):
+    import router
+    return {"mode": router.get_mode(session_id), "gemini_available": router.gemini_available()}
+
+
+@app.post("/api/mode")
+def mode_set(body: ModeIn):
+    import router
+    m = router.set_mode(body.session_id, body.mode)
+    # Aviso: híbrido sin API key cae a local.
+    warn = None
+    if m == "hybrid" and not router.gemini_available():
+        warn = "No hay API key de Gemini configurada. El modo híbrido usará solo DeepHat (local)."
+    return {"mode": m, "gemini_available": router.gemini_available(), "warning": warn}
+
+
 @app.get("/api/target")
 def get_target():
     return {"target": state.get_target()}
