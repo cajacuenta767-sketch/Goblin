@@ -6,6 +6,7 @@ requieren aprobación del usuario antes de ejecutarse.
 from . import filesystem as fs
 from . import shell as sh
 from . import pentest as pt
+from . import targets as tg
 
 TOOLS = {
     "list_dir": fs.list_dir,
@@ -20,6 +21,9 @@ TOOLS = {
     "run_shell": sh.run_shell,
     "add_finding": pt.add_finding,
     "generate_report": pt.generate_report,
+    "set_target": tg.set_target,
+    "clear_target": tg.clear_target,
+    "get_target": tg.get_target,
 }
 
 # Herramientas que modifican/ejecutan: requieren aprobación del usuario.
@@ -95,4 +99,10 @@ SCHEMAS = [
        "Genera el informe de pentest en Markdown con todos los hallazgos registrados "
        "en esta sesión. Úsalo cuando el usuario pida el reporte.",
        {}, []),
+    _t("set_target",
+       "Fija el objetivo (IP o dominio) del pentest. Crea la estructura de carpetas del "
+       "engagement y lo muestra en la barra del sistema. Úsalo al empezar con un objetivo.",
+       {"target": {"type": S, "description": "IP o dominio del objetivo"}}, ["target"]),
+    _t("clear_target", "Limpia el objetivo actual del pentest.", {}, []),
+    _t("get_target", "Muestra el objetivo actual del pentest.", {}, []),
 ]
