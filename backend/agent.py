@@ -211,3 +211,69 @@ def approve(sid: str, approved: bool) -> dict:
 
 def reset_session(sid: str) -> None:
     sessions.pop(sid, None)
+
+
+def stream_message(sid: str, text: str, model: str | None = None):
+    """Versión en streaming (Spec 018). Devuelve un generador de trozos de texto.
+    Si la IA pide herramientas, cambia al flujo normal (señala 'tool' y el cliente
+    reenvía por /api/chat). Solo hace streaming real del texto final.
+    """
+    s = get_session(sid, model)
+    try:
+        from tools import pentest
+        pentest.set_session(sid)
+    except Exception:
+        pass
+    s["messages"].append({"role": "user", "content": text})
+    s["steps"] = 0
+    try:
+        db.ensure_session(sid, s["model"])
+        existing = db.get_messages(sid)
+        db.add_message(sid, "user", text, None)
+        if not existing:
+            db.set_title(sid, text[:60])
+    except Exception:
+        pass
+
+    # Solo hacemos streaming en modo local (DeepHat/Ollama). En híbrido/manual con otro
+    # modelo, delegamos al flujo normal.
+    mode = router.get_mode(sid)
+    if mode != "local":
+        yield {"type": "fallback"}
+        return
+
+    # Primer sondeo SIN stream para saber si pedirá herramientas.
+    try:
+        probe = client.chat(model=s["model"], messages=s["messages"], tools=SCHEMAS,
+                            options={"num_ctx": config.NUM_CTX}, keep_alive=config.KEEP_ALIVE)
+    except Exception as e:
+        yield {"type": "error", "content": f"Error al contactar el modelo: {e}"}
+        return
+
+    if probe.message.tool_calls:
+        # Necesita herramientas → el flujo normal lo maneja (con aprobaciones).
+        s["messages"].pop()  # quitar el user que reañadirá user_message
+        s["messages"].pop() if s["messages"] and s["messages"][-1].get("role") == "user" else None
+        yield {"type": "fallback"}
+        return
+
+    # Respuesta de texto: re-pedimos en streaming para transmitir token a token.
+    full = ""
+    try:
+        for chunk in client.chat(model=s["model"], messages=s["messages"],
+                                 options={"num_ctx": config.NUM_CTX},
+                                 keep_alive=config.KEEP_ALIVE, stream=True):
+            piece = chunk.message.content or ""
+            if piece:
+                full += piece
+                yield {"type": "token", "content": piece}
+    except Exception as e:
+        yield {"type": "error", "content": f"Error en streaming: {e}"}
+        return
+
+    s["messages"].append({"role": "assistant", "content": full})
+    try:
+        db.add_message(sid, "assistant", full, "DeepHat")
+    except Exception:
+        pass
+    yield {"type": "done", "model": "DeepHat"}

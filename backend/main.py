@@ -52,6 +52,19 @@ def approve(body: ApproveIn):
     return agent.approve(body.session_id, body.approved)
 
 
+@app.post("/api/chat/stream")
+def chat_stream(body: ChatIn):
+    """Chat en streaming (Spec 018): transmite la respuesta token a token (SSE)."""
+    import json as _json
+    from fastapi.responses import StreamingResponse
+
+    def gen():
+        for ev in agent.stream_message(body.session_id, body.message, body.model):
+            yield f"data: {_json.dumps(ev, ensure_ascii=False)}\n\n"
+
+    return StreamingResponse(gen(), media_type="text/event-stream")
+
+
 @app.get("/api/files")
 def files(path: str = "."):
     try:

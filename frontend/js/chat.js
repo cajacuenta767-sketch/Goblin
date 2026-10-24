@@ -93,6 +93,11 @@ const Chat = {
     this.el.input.style.height = "auto";
     this.addMessage("user", text);
     this.setBusy(true);
+    // Intentar streaming; si el backend indica fallback (herramientas), usar el modo normal.
+    try {
+      const didStream = await this.sendStream(text);
+      if (didStream) return;
+    } catch { /* si el streaming falla, caemos al modo normal */ }
     try {
       const resp = await API.chat(this.sessionId, text, window.GOBLIN.model);
       this.handle(resp);
@@ -100,5 +105,54 @@ const Chat = {
       this.addMessage("error", "No se pudo contactar el backend: " + e.message);
       this.setBusy(false);
     }
+  },
+
+  // Intenta responder en streaming. Devuelve true si se completó por streaming.
+  async sendStream(text) {
+    const r = await fetch("/api/chat/stream", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ session_id: this.sessionId, message: text, model: window.GOBLIN.model }),
+    });
+    if (!r.ok || !r.body) throw new Error("no stream");
+
+    const reader = r.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "", bubble = null, full = "", fell = false;
+
+    const ensureBubble = () => {
+      if (bubble) return;
+      const div = document.createElement("div");
+      div.className = "msg ai";
+      div.innerHTML = `<div class="who">GOBLIN <span class="model-tag">DeepHat</span></div><div class="bubble"></div>`;
+      this.el.messages.insertBefore(div, this.el.typing);
+      bubble = div.querySelector(".bubble");
+    };
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const parts = buffer.split("\n\n");
+      buffer = parts.pop();
+      for (const p of parts) {
+        if (!p.startsWith("data: ")) continue;
+        let ev; try { ev = JSON.parse(p.slice(6)); } catch { continue; }
+        if (ev.type === "fallback") { fell = true; }
+        else if (ev.type === "token") { ensureBubble(); full += ev.content; bubble.textContent = full; this.scrollDown(); }
+        else if (ev.type === "error") { this.addMessage("error", ev.content); this.setBusy(false); return true; }
+        else if (ev.type === "done") {
+          if (bubble) bubble.innerHTML = this.renderMarkdown(full);
+          bubble && bubble.querySelectorAll("pre code").forEach((b) => { try { hljs.highlightElement(b); } catch {} });
+          this.setBusy(false);
+          Explorer.refresh();
+          if (window.Sessions) Sessions.refresh();
+          if (window.Findings) Findings.refresh();
+          return true;
+        }
+      }
+    }
+    if (fell) return false;   // el backend pidió usar el flujo normal
+    this.setBusy(false);
+    return true;
   },
 };
