@@ -44,19 +44,25 @@ El proyecto se construye con **SDD (Spec-Driven Development)**: todo nace de una
 
 ## ▶️ Cómo instalar y correr (en Parrot OS)
 
+GOBLIN es una **app nativa de escritorio** (ventana propia, no el navegador). Hay dos formas:
+
+### Opción A — App nativa (lo que el usuario quiere) ⭐
 ```bash
-# 1. Instalar todo (Ollama + dependencias + modelo DeepHat ~4.5 GB)
 chmod +x scripts/*.sh
-./scripts/install.sh
+./scripts/install.sh          # instala todo; responde "s" a lo de la app nativa (Tauri)
+./scripts/build.sh            # compila la app y genera el .deb
+sudo dpkg -i src-tauri/target/release/bundle/deb/*.deb
+sudo apt -f install           # si faltan dependencias
+# Luego busca "GOBLIN" en tu menú de aplicaciones
+```
 
-# 2. Arrancar
-./scripts/run.sh
-
-# 3. Abrir en el navegador
-#    http://127.0.0.1:8800
+### Opción B — Modo navegador (solo para desarrollo/pruebas rápidas)
+```bash
+./scripts/run.sh              # abre http://127.0.0.1:8800 en el navegador
 ```
 
 **Requisitos:** Linux (Parrot OS), Python 3.11+, 16 GB RAM, ~6 GB de disco libre.
+Para la app nativa además: Rust, Node.js y libs de GTK/WebKit (los instala `install-nativo.sh`).
 
 ---
 

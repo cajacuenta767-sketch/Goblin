@@ -35,11 +35,25 @@
 - ⬜ T002.10 — Validar chat real con DeepHat (en la PC del usuario)
 - ⬜ T002.11 — Editor Monaco (iteración futura, se dejó fuera de v1 a propósito)
 
+## Spec 003 — App nativa con Tauri ✅ (config lista, compila en Parrot)
+
+- ✅ T003.1 — src-tauri/Cargo.toml (dependencias Rust/Tauri v2)
+- ✅ T003.2 — src-tauri/src/main.rs (arranca backend Python, abre ventana, lo detiene al cerrar)
+- ✅ T003.3 — src-tauri/tauri.conf.json (ventana, bundle deb/appimage, deps del .deb)
+- ✅ T003.4 — src-tauri/build.rs
+- ✅ T003.5 — Iconos de GOBLIN (hexágono verde, 32/128/256/512 px)
+- ✅ T003.6 — scripts/install-nativo.sh (Rust + Node + CLI Tauri + libs GTK/WebKit)
+- ✅ T003.7 — scripts/build.sh (compila la app + genera .deb)
+- ✅ T003.8 — install.sh actualizado (ofrece instalar la app nativa)
+- ✅ T003.9 — Validar config (JSON/TOML/estructura main.rs) — hecho en el entorno
+- ⬜ T003.10 — Compilar el .deb en Parrot y validar la ventana nativa (en la PC del usuario)
+
 ## Infraestructura (transversal)
 
 - ✅ TI.1 — scripts/install.sh (instalador Parrot, instala Ollama + deps + modelo)
-- ✅ TI.2 — scripts/run.sh (arranque con flags de RAM/CPU)
-- ⬜ TI.3 — Subir a GitHub (repo público "goblin") — pendiente de reconectar GitHub
+- ✅ TI.2 — scripts/run.sh (modo navegador para desarrollo)
+- ✅ TI.3 — Subir a GitHub (repo cajacuenta767-sketch/Goblin) — CONECTADO y subido
+- ✅ TI.4 — scripts/subir-github.sh
 
 ---
 

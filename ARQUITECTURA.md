@@ -55,10 +55,16 @@
 | Modelo nube      | Gemini (Fase 2.5)     | Opcional, más adelante                               |
 | Transcripción    | **faster-whisper**    | Dictado por voz local (Fase 5)                       |
 
-### 2.4. Empaquetado (futuro, Fase 7)
+### 2.4. App nativa de escritorio (Spec 003) 🔵
 | Pieza            | Elección              | Por qué                                              |
 |------------------|-----------------------|------------------------------------------------------|
-| App de escritorio| **Tauri** o navegador | Por ahora corre en navegador; Tauri al final         |
+| App de escritorio| **Tauri v2**          | El usuario pidió app NATIVA para Parrot, no web      |
+| Formato ventana  | GTK + WebKit (sistema)| Ligero: no empaqueta Chromium (importa por 16 GB)    |
+| Instalador       | `.deb` + AppImage     | Instalable en Parrot con dpkg/apt                    |
+
+> 🔵 **Decisión:** GOBLIN es una app nativa. Tauri abre una ventana propia que arranca el
+> backend Python como proceso hijo y carga el frontend desde 127.0.0.1:8800. El modo
+> navegador (`run.sh`) se mantiene solo para desarrollo. Ver `.specify/specs/003-app-nativa-tauri.md`.
 
 ---
 

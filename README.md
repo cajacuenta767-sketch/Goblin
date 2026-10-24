@@ -41,29 +41,30 @@ que nada sale a la nube.
 - **Ollama:** se instala automáticamente
 - **Espacio:** ~6 GB para el modelo
 
-## Instalación
+## Instalación (app nativa de escritorio)
 
 ```bash
-git clone https://github.com/TU_USUARIO/goblin.git
-cd goblin
-cp .env.example .env
+git clone https://github.com/cajacuenta767-sketch/Goblin.git
+cd Goblin
 chmod +x scripts/*.sh
-./scripts/install.sh
+./scripts/install.sh      # instala Ollama + deps + modelo (responde "s" a la app nativa)
+./scripts/build.sh        # compila la app y genera el .deb
+sudo dpkg -i src-tauri/target/release/bundle/deb/*.deb
+sudo apt -f install       # si faltan dependencias
 ```
 
-## Uso
+Luego busca **GOBLIN** en tu menú de aplicaciones. Se abre en su propia ventana.
 
+### Modo navegador (desarrollo)
 ```bash
-./scripts/run.sh
+./scripts/run.sh          # abre http://127.0.0.1:8800
 ```
-
-Luego abre `http://127.0.0.1:8000` en tu navegador.
 
 ## Arquitectura
 
-Backend en **Python (FastAPI)** + **SQLite**, frontend en **HTML/CSS/JS vanilla** con
-**Monaco** y **xterm.js**. Ver [ARQUITECTURA.md](ARQUITECTURA.md) para el detalle técnico
-y [PLAN.md](PLAN.md) para el roadmap.
+App nativa con **Tauri** (ventana GTK/WebKit) que envuelve un backend **Python (FastAPI)** y
+un frontend **HTML/CSS/JS vanilla**. El modelo corre local vía **Ollama**. Ver
+[ARQUITECTURA.md](ARQUITECTURA.md) para el detalle y [PLAN.md](PLAN.md) para el roadmap.
 
 ## Estado del proyecto
 

@@ -11,7 +11,8 @@
 - **Backend:** Python 3.11+ · FastAPI · Ollama
 - **Frontend:** HTML/CSS/JS (luego migrable a React + Vite)
 - 🔵 **Arquitectura de modelos: HÍBRIDA.** Gemini (nube) orquesta y responde rápido; **DeepHat-V1-7B** (local) entra cuando Gemini se niega por censura o cuando hay datos sensibles del objetivo.
-- **Estado del documento:** v1.2 — vivo, se va actualizando por fases
+- **Estado del documento:** v1.3 — vivo, se va actualizando por fases
+- 🔵 **GOBLIN es una APP NATIVA de escritorio** (Tauri) para Parrot, NO un formato web. El modo navegador queda solo para desarrollo. Ver spec 003.
 - 🔵 **Metodología: SDD (Spec-Driven Development).** El proyecto se construye desde especificaciones: constitución → spec → plan → tareas → implementación → validación. Ver `.specify/` y `AGENTS.md`.
 - 🔵 **Perfil del usuario:** ingeniero de ciberseguridad → proyecto enfocado 100% en pentesting
 - 🔵 **Hardware objetivo real:** i7-10700 (8C/16H) · 16 GB RAM · **sin GPU dedicada** (solo CPU) → ver §8
@@ -544,3 +545,9 @@ ia-ide/
   visual, severidad por colores, barra de progreso, resaltado de comandos peligrosos, mini-mapa,
   contador de tokens, tooltips) y §9.8 (lo que NO se agrega). Badge de target DESCARTADO
   (ya está en la Polybar).
+- 🔵 **v1.2** — Adoptado SDD (Spec-Driven Development) como metodología. Creados constitución,
+  AGENTS.md, specs y tasks. Construido backend completo (spec 001) y frontend funcional (spec 002).
+- 🔵 **v1.3** — **Corrección clave:** el usuario pidió app NATIVA, no web. GOBLIN se empaqueta
+  con **Tauri v2** como app de escritorio para Parrot (ventana propia, icono, instalador .deb).
+  Spec 003 creada e implementada (config lista; se compila en Parrot). El modo navegador queda
+  solo para desarrollo. Proyecto conectado y subido a GitHub (cajacuenta767-sketch/Goblin).

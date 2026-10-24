@@ -30,11 +30,26 @@
 | `frontend/js/explorer.js` | Árbol de archivos navegable | ✅ |
 | `frontend/js/main.js` | Arranque, estado, barra inferior RAM/CPU | ✅ |
 
+### App nativa (Spec 003) — configuración lista, se compila en Parrot
+| Archivo | Qué hace | Probado |
+|---------|----------|---------|
+| `src-tauri/Cargo.toml` | Dependencias Rust/Tauri v2 | ✅ TOML válido |
+| `src-tauri/src/main.rs` | Arranca el backend Python, abre la ventana nativa, lo detiene al cerrar | ✅ estructura coherente |
+| `src-tauri/tauri.conf.json` | Ventana (1400x900), bundle `.deb`/AppImage, deps del paquete | ✅ JSON válido |
+| `src-tauri/icons/` | Icono GOBLIN (hexágono verde, varios tamaños) | ✅ generados |
+| `scripts/install-nativo.sh` | Instala Rust + Node + CLI Tauri + libs GTK/WebKit | ✅ |
+| `scripts/build.sh` | Compila la app y genera el `.deb` | ⬜ (se compila en Parrot) |
+
+> ⚠️ La compilación final (`.deb`) se hace en TU Parrot: Tauri necesita Rust y libs de
+> sistema que no están en el entorno de nube. Toda la config está lista y validada; en tu
+> PC solo corres `./scripts/install-nativo.sh` y luego `./scripts/build.sh`.
+
 ### Infraestructura
-- ✅ `scripts/install.sh` — instala Ollama + deps + modelo
-- ✅ `scripts/run.sh` — arranca con flags de RAM/CPU
-- ✅ Git inicializado con 3 commits
-- ✅ SDD: constitución, AGENTS.md, specs, tasks
+- ✅ `scripts/install.sh` — instala Ollama + deps + modelo (y ofrece la app nativa)
+- ✅ `scripts/run.sh` — modo navegador (desarrollo)
+- ✅ `scripts/build.sh` — compila la app nativa
+- ✅ Git conectado a GitHub (cajacuenta767-sketch/Goblin) y subido
+- ✅ SDD: constitución, AGENTS.md, specs (001, 002, 003), tasks
 
 ---
 
