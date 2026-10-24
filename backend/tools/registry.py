@@ -8,6 +8,7 @@ from . import shell as sh
 from . import pentest as pt
 from . import targets as tg
 from . import snippets_tool as sn
+from . import scan_tool as sc
 
 TOOLS = {
     "list_dir": fs.list_dir,
@@ -26,6 +27,8 @@ TOOLS = {
     "clear_target": tg.clear_target,
     "get_target": tg.get_target,
     "get_snippet": sn.get_snippet,
+    "parse_nmap": sc.parse_nmap,
+    "parse_nikto": sc.parse_nikto,
 }
 
 # Herramientas que modifican/ejecutan: requieren aprobación del usuario.
@@ -111,4 +114,11 @@ SCHEMAS = [
        "Devuelve snippets/one-liners de pentest de una categoría (reverse_shell, listener, "
        "transfer, tty_upgrade, recon, privesc). Sin categoría, lista las disponibles.",
        {"category": {"type": S, "description": "Categoría de snippet"}}, []),
+    _t("parse_nmap",
+       "Parsea la salida de un escaneo nmap (texto o ruta a archivo -oN) y extrae los "
+       "puertos abiertos, servicios y versiones de forma estructurada.",
+       {"output": {"type": S, "description": "Salida de nmap o ruta al archivo"}}, ["output"]),
+    _t("parse_nikto",
+       "Parsea la salida de nikto (texto o ruta a archivo) y extrae los hallazgos web.",
+       {"output": {"type": S, "description": "Salida de nikto o ruta al archivo"}}, ["output"]),
 ]
