@@ -19,8 +19,23 @@ const App = {
     this.wireUI();
     await this.loadInfo();
     await this.refreshStatus();
+    await this.checkDiagnostics();
     // refrescar RAM/CPU y estado de Ollama cada 5 s
     setInterval(() => this.refreshStatus(), 5000);
+  },
+
+  // Aviso de primer uso: si falta Ollama o el modelo, lo explica en el chat.
+  async checkDiagnostics() {
+    try {
+      const d = await API.diagnostics();
+      if (d && !d.ok && d.problems && d.problems.length) {
+        let msg = "⚠️ **Antes de empezar, revisa esto:**\n\n";
+        for (const p of d.problems) {
+          msg += `- **${p.what}**\n  \`${p.fix}\`\n`;
+        }
+        Chat.addMessage("ai", msg, "DeepHat");
+      }
+    } catch { /* si el backend no responde, se ve en la barra de estado */ }
   },
 
   // Reemplaza los <img> del logo por el SVG inline (así la animación por clase funciona)

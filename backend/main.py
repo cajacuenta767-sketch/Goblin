@@ -217,6 +217,64 @@ def system():
         return {"ok": False, "error": str(e)}
 
 
+@app.get("/api/diagnostics")
+def diagnostics():
+    """Diagnóstico de primer uso (Spec 015): Ollama, modelo, disco, RAM."""
+    import shutil
+    result = {"problems": []}
+
+    # Ollama vivo
+    models = []
+    try:
+        models = [m.model for m in ollama_client.list().models]
+        result["ollama"] = "ok"
+    except Exception:
+        result["ollama"] = "down"
+        result["problems"].append({
+            "what": "Ollama no está corriendo",
+            "fix": "Arráncalo con: ollama serve  (o usa ./scripts/run.sh)",
+        })
+
+    # Modelo por defecto descargado
+    short = config.DEFAULT_MODEL
+    model_ok = any(short.split("/")[-1].split(":")[0].lower() in m.lower() for m in models)
+    result["model_downloaded"] = model_ok
+    if result["ollama"] == "ok" and not model_ok:
+        result["problems"].append({
+            "what": "El modelo por defecto no está descargado",
+            "fix": f"Descárgalo con: ollama pull {config.DEFAULT_MODEL}",
+        })
+
+    # Disco
+    try:
+        _t, _u, free = shutil.disk_usage(config.WORKSPACE)
+        free_gb = round(free / (1024 ** 3), 1)
+        result["disk_free_gb"] = free_gb
+        if free_gb < 10:
+            result["problems"].append({
+                "what": f"Poco espacio en disco ({free_gb} GB libres)",
+                "fix": "Libera espacio; el modelo necesita ~5 GB.",
+            })
+    except Exception:
+        pass
+
+    # RAM
+    try:
+        import psutil
+        avail = round(psutil.virtual_memory().available / (1024 ** 3), 1)
+        result["ram_available_gb"] = avail
+        if avail < 2:
+            result["problems"].append({
+                "what": f"Poca RAM disponible ({avail} GB)",
+                "fix": "Cierra apps pesadas; el modelo 7B necesita ~6 GB.",
+            })
+    except Exception:
+        pass
+
+    result["ok"] = len(result["problems"]) == 0
+    return result
+
+
 @app.websocket("/ws/terminal")
 async def ws_terminal(websocket: WebSocket):
     """Terminal pty real (Spec 004). Arranca en el workspace o en la carpeta del target."""

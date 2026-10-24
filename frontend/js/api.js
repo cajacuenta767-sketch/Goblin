@@ -68,6 +68,9 @@ const API = {
   // Estado de Ollama
   health() { return this._get("/api/health"); },
 
+  // Diagnóstico de primer uso
+  diagnostics() { return this._get("/api/diagnostics"); },
+
   // Target (Polybar)
   getTarget() { return this._get("/api/target"); },
   setTarget(target) { return this._post("/api/target", { target }); },

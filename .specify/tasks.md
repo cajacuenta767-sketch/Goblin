@@ -115,14 +115,17 @@
 - ✅ T010.3 — Reconocimiento en español, avisa si el navegador no soporta
 - ✅ T010.4 — Validado: voice.js se sirve y se inicializa
 
-## ✅ TODAS LAS SPECS PRINCIPALES COMPLETAS
+## Specs 011-015 (rondas autónomas) ✅
 
-Pendiente de cablear en la UI (backend listo, falta frontend):
-- Sidebar de sesiones reales (endpoints /api/sessions ya existen)
-- Panel de hallazgos visual (endpoints /api/findings ya existen)
-- Botón de generar informe (endpoint /api/report ya existe)
+- ✅ 011 — UI de sesiones, hallazgos e informe (sidebar real, panel de findings)
+- ✅ 012 — Targets y engagements (set_target crea estructura + Polybar, comandos rápidos)
+- ✅ 013 — Tests automáticos (24 tests: tools, seguridad, db, router, informe, targets)
+- ✅ 014 — CI (GitHub Actions) + snippets de pentest + LICENSE + CONTRIBUTING
+- ✅ 015 — Robustez y diagnóstico (/api/diagnostics, avisos de primer uso)
 
-Validaciones que requieren la PC del usuario:
-- Compilar el .deb en Parrot
-- Probar chat con DeepHat real
+## ✅ TODAS LAS SPECS COMPLETAS (15 specs)
+
+Validaciones que SOLO requieren la PC del usuario:
+- Compilar el .deb en Parrot (./scripts/build.sh)
+- Probar chat con DeepHat real (Ollama + modelo)
 - Probar Gemini con API key real

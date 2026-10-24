@@ -3,9 +3,40 @@
 > Foto del proyecto: qué está hecho, qué falta, dónde está cada cosa. Se actualiza en cada
 > avance. **Última actualización:** 2026-10-23.
 
+## 🔵 Resumen de specs completadas (15 specs)
+
+| Spec | Qué | Estado |
+|------|-----|--------|
+| 001 | Backend core (agente, herramientas, API) | ✅ probado |
+| 002 | Frontend IDE (chat, explorador, aprobaciones) | ✅ probado |
+| 003 | App nativa Tauri (.deb) | ✅ config lista (compila en Parrot) |
+| 004 | Terminal integrada (pty real) | ✅ probado |
+| 005 | Persistencia (SQLite) | ✅ probado |
+| 006 | Hallazgos + informe de pentest | ✅ probado |
+| 007 | Editor Monaco | ✅ probado |
+| 008 | Router híbrido Gemini + DeepHat | ✅ probado (sin key) |
+| 009 | Autoaprobación por niveles | ✅ probado |
+| 010 | Dictado por voz | ✅ probado |
+| 011 | UI sesiones/hallazgos/informe | ✅ probado |
+| 012 | Targets y engagements | ✅ probado |
+| 013 | Tests automáticos (24 tests) | ✅ 24 pasan |
+| 014 | CI + snippets de pentest + LICENSE | ✅ probado |
+| 015 | Robustez y diagnóstico | ✅ probado |
+
+**Herramientas de la IA (15):** list_dir, read_file, write_file, make_dir, move_path,
+copy_path, delete_path, search_files, disk_usage, run_shell, add_finding, generate_report,
+set_target, clear_target, get_target, get_snippet.
+
+**Tests:** 24 automáticos (`./scripts/test.sh`), corren solos en GitHub (CI).
+
+## ⬜ Pendiente real (solo requiere la PC del usuario)
+- Compilar el `.deb` en Parrot (`./scripts/build.sh`)
+- Probar el chat con DeepHat real (Ollama + modelo descargado)
+- Probar Gemini con API key real (modo híbrido)
+
 ---
 
-## ✅ Hecho y probado
+## ✅ Hecho y probado (detalle histórico)
 
 ### Backend (Spec 001) — completo
 | Archivo | Qué hace | Probado |
