@@ -41,6 +41,10 @@ class TargetIn(BaseModel):
     target: str = ""
 
 
+class StopIn(BaseModel):
+    session_id: str = "main"
+
+
 # ---------- API ----------
 @app.post("/api/chat")
 def chat(body: ChatIn):
@@ -50,6 +54,12 @@ def chat(body: ChatIn):
 @app.post("/api/approve")
 def approve(body: ApproveIn):
     return agent.approve(body.session_id, body.approved)
+
+
+@app.post("/api/stop")
+def stop(body: StopIn):
+    """Detener (Spec 024): cancela la respuesta en curso y mata los procesos de shell."""
+    return agent.stop(body.session_id)
 
 
 @app.post("/api/chat/stream")
@@ -256,7 +266,7 @@ def diagnostics():
     # Ollama vivo
     models = []
     try:
-        models = [m.model for m in ollama_client.list().models]
+        models = [(m.model or "") for m in ollama_client.list().models]
         result["ollama"] = "ok"
     except Exception:
         result["ollama"] = "down"

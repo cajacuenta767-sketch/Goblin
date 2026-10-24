@@ -104,6 +104,7 @@ body {
 .msg.ai .bubble { background: var(--panel); border: 1px solid var(--line); }
 .msg.tool .bubble { background: #101214; border: 1px dashed var(--line); font-family: var(--mono); font-size: 12px; color: var(--text-dim); white-space: pre-wrap; }
 .msg.error .bubble { background: #2a1818; border: 1px solid var(--red-dim); color: #f0c0c0; }
+.msg.notice .bubble { background: #14181c; border: 1px solid var(--line); color: var(--text-dim); font-size: 13px; }
 .bubble pre { background: #000; padding: 10px; border-radius: 6px; overflow-x: auto; margin: 8px 0; }
 .bubble code { background: #000; padding: 1px 5px; border-radius: 4px; color: var(--accent); font-family: var(--mono); font-size: 12px; }
 .bubble pre code { padding: 0; }

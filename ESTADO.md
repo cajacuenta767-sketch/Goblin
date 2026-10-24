@@ -1,7 +1,7 @@
 # ESTADO del proyecto GOBLIN
 
 > Foto del proyecto: qué está hecho, qué falta, dónde está cada cosa. Se actualiza en cada
-> avance. **Última actualización:** 2026-10-23.
+> avance. **Última actualización:** 2026-10-24.
 
 ## 🔵 Resumen de specs completadas (15 specs)
 
@@ -90,14 +90,10 @@ set_target, clear_target, get_target, get_snippet.
 - ⬜ Probar el chat con **DeepHat real** (necesita Ollama corriendo + modelo descargado).
   Aquí solo se probó la infraestructura web; el modelo no estaba disponible en el entorno.
 
-### Próximas specs (sin escribir aún)
-- ⬜ **003** — Terminal pty integrada (xterm.js + shell persistente) — Fase 3
-- ⬜ **004** — Persistencia (SQLite: sesiones, mensajes) — Fase 4
-- ⬜ **005** — Hallazgos e informe de pentest — Fase 8
-- ⬜ **006** — Router híbrido Gemini + DeepHat — Fase 2.5
-- ⬜ **007** — Dictado por voz (Whisper local) — Fase 5
-- ⬜ **008** — Autoaprobación configurable por niveles
-- ⬜ **Editor Monaco** — se dejó fuera de la v1 del frontend a propósito
+### Specs siguientes
+La lista viva de tareas y el backlog priorizado están en `.specify/tasks.md`.
+Resumen al 2026-10-24: 024 (Detener) y 025 (guardas de privacidad y autorización) implementadas
+y validadas en el entorno; 022, 023 y 025 (Gemini real) esperan prueba en la PC del usuario.
 
 ---
 

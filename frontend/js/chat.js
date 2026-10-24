@@ -15,7 +15,8 @@ const Chat = {
     this.el.typing = document.getElementById("typing");
     this.el.progress = document.getElementById("progress");
 
-    this.el.sendBtn.addEventListener("click", () => this.send());
+    // Mientras GOBLIN responde, el botón de enviar es Detener (Spec 024)
+    this.el.sendBtn.addEventListener("click", () => (this.busy ? this.stop() : this.send()));
     this.el.input.addEventListener("keydown", (e) => {
       if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); this.send(); }
     });
@@ -31,6 +32,8 @@ const Chat = {
     this.el.typing.classList.toggle("show", on);
     this.el.progress.classList.toggle("active", on);
     this.el.sendBtn.style.opacity = on ? "0.5" : "1";
+    this.el.sendBtn.textContent = on ? "⏹" : "➤";
+    this.el.sendBtn.title = on ? "Detener" : "Enviar";
     if ((typeof App !== "undefined" && App) && App.setThinking) App.setThinking(on);  // anima el goblin
   },
 
@@ -49,6 +52,9 @@ const Chat = {
       div.querySelector(".bubble").textContent = content;
     } else if (role === "tool") {
       div.innerHTML = `<div class="who">herramienta</div><div class="bubble"></div>`;
+      div.querySelector(".bubble").textContent = content;
+    } else if (role === "notice") {
+      div.innerHTML = `<div class="who">GOBLIN</div><div class="bubble"></div>`;
       div.querySelector(".bubble").textContent = content;
     } else if (role === "error") {
       div.innerHTML = `<div class="who">GOBLIN</div><div class="bubble"></div>`;
@@ -74,15 +80,29 @@ const Chat = {
     if (resp.type === "approval") {
       Approvals.show(resp);          // delega en el módulo de aprobaciones
       this.setBusy(false);
+    } else if (resp.type === "stopped") {
+      this.addMessage("notice", resp.content);
+      this.setBusy(false);
     } else if (resp.type === "error") {
       this.addMessage("error", resp.content);
       this.setBusy(false);
     } else { // text
+      if (resp.note) this.addMessage("notice", resp.note);   // p. ej. datos sensibles → DeepHat (Spec 025)
       this.addMessage("ai", resp.content, resp.model);
       this.setBusy(false);
       Explorer.refresh();            // por si la IA cambió archivos
       if ((typeof Sessions !== "undefined" && Sessions)) Sessions.refresh();   // actualizar sidebar
       if ((typeof Findings !== "undefined" && Findings)) Findings.refresh();   // por si registró hallazgos
+    }
+  },
+
+  // Detener (Spec 024): pide al backend cortar la respuesta en curso.
+  // La petición que estaba abierta recibe el evento "stopped" y apaga el estado ocupado.
+  async stop() {
+    try {
+      await API.stop(this.sessionId);
+    } catch (e) {
+      this.addMessage("error", "No se pudo detener: " + e.message);
     }
   },
 
@@ -139,6 +159,12 @@ const Chat = {
         let ev; try { ev = JSON.parse(p.slice(6)); } catch { continue; }
         if (ev.type === "fallback") { fell = true; }
         else if (ev.type === "token") { ensureBubble(); full += ev.content; bubble.textContent = full; this.scrollDown(); }
+        else if (ev.type === "stopped") {
+          if (bubble) bubble.innerHTML = this.renderMarkdown(full);
+          this.addMessage("notice", ev.content);
+          this.setBusy(false);
+          return true;
+        }
         else if (ev.type === "error") { this.addMessage("error", ev.content); this.setBusy(false); return true; }
         else if (ev.type === "done") {
           if (bubble) bubble.innerHTML = this.renderMarkdown(full);

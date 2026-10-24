@@ -1,131 +1,118 @@
 # Tareas de GOBLIN (SDD)
 
-> Tareas concretas derivadas de las specs. Se marcan al completarse. Cada tarea apunta a
-> su spec. No se trabaja nada que no esté aquí; lo nuevo se añade primero como tarea.
+> Estado real al **2026-10-24**. Cada tarea apunta a su spec. Se marca ✅ solo si se probó.
+> "⬜ PC" = requiere la PC del usuario (Parrot). Lo nuevo se añade aquí antes de programarse.
 
-**Leyenda:** ⬜ pendiente · 🟨 en progreso · ✅ hecho
-
----
-
-## Spec 001 — Backend Core ✅
-
-- ✅ T001.1 — Estructura de carpetas por capas
-- ✅ T001.2 — config.py (lee .env, ajustes de hardware)
-- ✅ T001.3 — tools/filesystem.py (9 operaciones de archivos)
-- ✅ T001.4 — tools/shell.py (con bloqueo de comandos peligrosos)
-- ✅ T001.5 — tools/registry.py (catálogo + schemas + aprobaciones)
-- ✅ T001.6 — agent.py (bucle agéntico + aprobaciones + anti-bucle)
-- ✅ T001.7 — state.py (publicar target a Polybar)
-- ✅ T001.8 — main.py (API FastAPI)
-- ✅ T001.9 — Probar herramientas end-to-end (sin Ollama)
-- ⬜ T001.10 — Probar chat con DeepHat real (en la PC del usuario)
-
-## Spec 002 — Frontend IDE ✅ (v1 sin Monaco)
-
-- ✅ T002.1 — index.html (estructura de paneles)
-- ✅ T002.2 — css/theme.css (tokens de color, verde goblin)
-- ✅ T002.3 — css/layout.css (los 3 paneles + barra de estado + progreso)
-- ✅ T002.4 — js/api.js (llamadas al backend)
-- ✅ T002.5 — js/chat.js (enviar/recibir, etiqueta de modelo, markdown)
-- ✅ T002.6 — js/approvals.js (caja de aprobación visual, borde rojo si peligrosa)
-- ✅ T002.7 — js/explorer.js (árbol de archivos real, navegable)
-- ✅ T002.8 — js/main.js (arranque, estado, barra inferior con RAM/CPU)
-- ✅ T002.x — backend: endpoint /api/system (RAM/CPU) añadido
-- ✅ T002.9 — Validar endpoints + servido del frontend (sin Ollama)
-- ⬜ T002.10 — Validar chat real con DeepHat (en la PC del usuario)
-- ⬜ T002.11 — Editor Monaco (iteración futura, se dejó fuera de v1 a propósito)
-
-## Spec 003 — App nativa con Tauri ✅ (config lista, compila en Parrot)
-
-- ✅ T003.1 — src-tauri/Cargo.toml (dependencias Rust/Tauri v2)
-- ✅ T003.2 — src-tauri/src/main.rs (arranca backend Python, abre ventana, lo detiene al cerrar)
-- ✅ T003.3 — src-tauri/tauri.conf.json (ventana, bundle deb/appimage, deps del .deb)
-- ✅ T003.4 — src-tauri/build.rs
-- ✅ T003.5 — Iconos de GOBLIN (hexágono verde, 32/128/256/512 px)
-- ✅ T003.6 — scripts/install-nativo.sh (Rust + Node + CLI Tauri + libs GTK/WebKit)
-- ✅ T003.7 — scripts/build.sh (compila la app + genera .deb)
-- ✅ T003.8 — install.sh actualizado (ofrece instalar la app nativa)
-- ✅ T003.9 — Validar config (JSON/TOML/estructura main.rs) — hecho en el entorno
-- ⬜ T003.10 — Compilar el .deb en Parrot y validar la ventana nativa (en la PC del usuario)
-
-## Infraestructura (transversal)
-
-- ✅ TI.1 — scripts/install.sh (instalador Parrot, instala Ollama + deps + modelo)
-- ✅ TI.2 — scripts/run.sh (modo navegador para desarrollo)
-- ✅ TI.3 — Subir a GitHub (repo cajacuenta767-sketch/Goblin) — CONECTADO y subido
-- ✅ TI.4 — scripts/subir-github.sh
+**Leyenda:** ⬜ pendiente · 🟨 implementado, validación pendiente · ✅ hecho y validado
 
 ---
 
-## Spec 004 — Terminal integrada (pty real) ✅
+## Núcleo (specs 001–007) — ✅ salvo validaciones en PC
 
-- ✅ T004.1 — backend/terminal.py (shell bash persistente sobre pty)
-- ✅ T004.2 — backend/main.py: WebSocket /ws/terminal
-- ✅ T004.3 — frontend: xterm.js por CDN + panel de terminal
-- ✅ T004.4 — frontend/js/terminal.js (cliente xterm ↔ WebSocket)
-- ✅ T004.5 — CSS del panel de terminal + botón "Terminal" en el input
-- ✅ T004.6 — Validado end-to-end: cd y variables persisten (shell real viva)
+- ✅ 001 Backend core (agente, herramientas, API, tests). ⬜ PC: chat real con DeepHat (T001.10).
+- ✅ 002 Frontend IDE (chat, explorador, aprobaciones). ⬜ PC: chat real (T002.10).
+- 🟨 003 App nativa Tauri. Config lista; ⬜ PC: compilar el paquete y validar la ventana (T003.10).
+- ✅ 004 Terminal integrada (pty real, WebSocket).
+- ✅ 005 Persistencia SQLite (sesiones, mensajes, auditoría).
+- ✅ 006 Hallazgos e informe Markdown.
+- 🟨 007 Editor Monaco. Funciona, pero carga Monaco desde CDN (necesita internet). **Falta el archivo de spec 007** (ver backlog B-07).
 
-## Spec 005 — Persistencia (SQLite) ✅
+## Specs 008–019 — 🟨 código y tests listos; checklists de la spec sin marcar
 
-- ✅ T005.1 — backend/db.py (SQLite stdlib: sesiones, mensajes, findings, auditoría)
-- ✅ T005.2 — agent.py guarda mensajes + log de auditoría de cada acción
-- ✅ T005.3 — main.py: endpoints /api/sessions (listar/abrir/borrar)
-- ✅ T005.4 — Resuelto conflicto: eliminada carpeta db/ vacía que tapaba db.py
-- ✅ T005.5 — Validado: mensajes/sesiones/auditoría persisten y se borran
+Cada spec tiene su checklist sin marcar. No se marca hasta validarla en la PC.
 
-## Spec 006 — Hallazgos e informe de pentest ✅
+- 🟨 008 Router híbrido (Gemini + DeepHat). ⬜ PC: probar Gemini con API key real (T008.8).
+- 🟨 009 Autoaprobación por niveles (cauto / normal / confianza). Validado: `delete_path` siempre pide.
+- 🟨 010 Dictado por voz (Web Speech API).
+- 🟨 011 UI de sesiones, hallazgos e informe.
+- 🟨 012 Targets y engagements.
+- 🟨 013 Tests automáticos (suite actual: 46 pruebas, pasan).
+- 🟨 014 CI, snippets y metadatos del repo. Snippets solo accesibles por la IA (ver B-02).
+- 🟨 015 Robustez y diagnóstico (`/api/diagnostics`). Corregido 500 por modelo sin nombre (2026-10-24).
+- 🟨 016 Marketplace de herramientas (instalar nmap, sqlmap, etc. desde la app).
+- 🟨 017 Parsers de escaneos (nmap / nikto).
+- 🟨 018 Streaming de respuestas. Validado: el streaming se corta con Detener (spec 024).
+- 🟨 019 La IA escribe en la terminal y ve su salida.
 
-- ✅ T006.1 — backend/report.py (informe Markdown: resumen, tabla, detalle, anexo auditoría)
-- ✅ T006.2 — backend/tools/pentest.py (herramientas add_finding, generate_report)
-- ✅ T006.3 — registry.py: registradas las 2 herramientas nuevas + schemas
-- ✅ T006.4 — main.py: endpoints /api/findings, /api/report
-- ✅ T006.5 — Validado: la IA registra hallazgos y genera informe profesional
+## Spec 021 — Fix app nativa: backend ✅
 
-## Spec 007 — Editor Monaco ✅
+- ✅ Arranque del backend desde la app nativa (`find_project_dir`, espera a 127.0.0.1:8800).
+- ⬜ PC: confirmar que la app abre sin terminal.
 
-- ✅ T007.1 — main.py: endpoints /api/file (leer y escribir contenido)
-- ✅ T007.2 — Monaco por CDN + panel de editor en el panel derecho
-- ✅ T007.3 — frontend/js/editor.js (abrir, editar, guardar con Ctrl+S, resaltado por lenguaje)
-- ✅ T007.4 — explorer.js: clic en archivo lo abre en el editor
-- ✅ T007.5 — Validado: leer/escribir archivos vía API funciona
+## Spec 022 — Tool-calling para DeepHat + respaldo por texto — 🟨
 
-## Spec 008 — Router híbrido (Gemini + DeepHat) ✅
+- ✅ Parser `text_toolcall.py` y su integración con aprobaciones (tests).
+- ⬜ PC: `hola` no imprime JSON; "crea la carpeta …" dispara la caja de aprobación; el log muestra `Tool call recuperada por texto`.
 
-- ✅ T008.1 — backend/router.py (modos local/hybrid/manual, detección de negativa)
-- ✅ T008.2 — backend/core/llm/gemini_client.py (cliente Gemini con tools, falla limpio)
-- ✅ T008.3 — agent.py: _call_model aplica el router (Gemini → fallback DeepHat)
-- ✅ T008.4 — config.py: GEMINI_API_KEY, GEMINI_MODEL
-- ✅ T008.5 — main.py: endpoints /api/mode (get/set)
-- ✅ T008.6 — frontend: chip de modo (Local/Híbrido/Manual) + aviso sin API key
-- ✅ T008.7 — Validado: modo por defecto local, híbrido sin key avisa y usa DeepHat
-- ⬜ T008.8 — Probar Gemini real con API key (requiere key del usuario)
+## Spec 023 — Botones funcionales — 🟨
 
-## Spec 009 — Autoaprobación por niveles ✅
+- ✅ Probado en Chromium contra el backend: todos los controles visibles responden.
+- ✅ Riel de barra colapsada (corregido: antes no se podía reabrir).
+- ✅ Explorador lista, entra y sube carpetas (corregido error por `#wsView`).
+- ⬜ PC: controles de ventana (cerrar, minimizar, maximizar) con la app compilada.
 
-- ✅ T009.1 — backend/approvals.py (niveles cauto/normal/confianza)
-- ✅ T009.2 — agent.py consulta el nivel antes de pedir aprobación
-- ✅ T009.3 — main.py: endpoint /api/approval-level
-- ✅ T009.4 — Validado: delete SIEMPRE pide (incluso en confianza); lista negra siempre aplica
+## Spec 024 — Botón Detener — ✅
 
-## Spec 010 — Dictado por voz ✅
+- ✅ Botón ⏹ mientras responde; el aviso aparece en ~250 ms con un modelo que tarda 25 s.
+- ✅ Streaming detenido entre trozos (873 ms; el texto queda congelado).
+- ✅ `run_shell` interrumpido termina con `CANCELADO` en menos de 5 s (grupo de procesos).
+- ✅ La cola de herramientas y la cola de aprobación se vacían.
+- ⬜ Pendiente (spec 031): procesos de la terminal pty.
 
-- ✅ T010.1 — frontend/js/voice.js (Web Speech API, sin Whisper para ahorrar RAM)
-- ✅ T010.2 — Micrófono con indicador "escuchando" (rojo pulsante)
-- ✅ T010.3 — Reconocimiento en español, avisa si el navegador no soporta
-- ✅ T010.4 — Validado: voice.js se sirve y se inicializa
+## Spec 025 — Guardas de privacidad y autorización — 🟨
 
-## Specs 011-015 (rondas autónomas) ✅
+- ✅ Híbrido: IP, rango de red u objetivo activo en el historial fuerzan DeepHat local, con nota en el chat.
+- ✅ `set_target` pide aprobación en todos los niveles; la caja muestra la advertencia de autorización por escrito.
+- ✅ Denegar `set_target` deja el objetivo intacto.
+- ⬜ PC: híbrido sin datos sigue usando Gemini (requiere API key real).
+- ⚠️ Límite: IPv6, nombres de cliente y hostnames arbitrarios no se detectan (ver B-10).
 
-- ✅ 011 — UI de sesiones, hallazgos e informe (sidebar real, panel de findings)
-- ✅ 012 — Targets y engagements (set_target crea estructura + Polybar, comandos rápidos)
-- ✅ 013 — Tests automáticos (24 tests: tools, seguridad, db, router, informe, targets)
-- ✅ 014 — CI (GitHub Actions) + snippets de pentest + LICENSE + CONTRIBUTING
-- ✅ 015 — Robustez y diagnóstico (/api/diagnostics, avisos de primer uso)
+---
 
-## ✅ TODAS LAS SPECS COMPLETAS (15 specs)
+## Infraestructura (transversal) — ✅
 
-Validaciones que SOLO requieren la PC del usuario:
-- Compilar el .deb en Parrot (./scripts/build.sh)
-- Probar chat con DeepHat real (Ollama + modelo)
-- Probar Gemini con API key real
+- ✅ `scripts/install.sh`, `run.sh`, `build.sh`, `install-nativo.sh`, `subir-github.sh`.
+- ✅ GitHub: `cajacuenta767-sketch/Goblin` (ver aviso de redirección en el push: usar la URL con mayúscula).
+- ✅ CI en GitHub Actions corre los tests de backend.
+
+---
+
+## Backlog priorizado (análisis del 2026-10-24)
+
+Orden según riesgo y valor. Cada ítem se convertirá en spec antes de programarse (constitución VI.1).
+
+### Prioridad 1 — Lo que el plan exige y falta
+
+- ⬜ **B-01 · Comandos rápidos reales** (`/target`, `/recon`, `/scan`, `/report`). Hoy solo aparecen en el prompt del sistema; ningún código los procesa. Plan §10.4 #16. → spec 026.
+- ⬜ **B-02 · Snippets en la UI**: clic en un snippet lo inserta en el chat/terminal. Hoy solo la IA puede leerlos (`get_snippet`). Fase 8. → spec 027.
+- ⬜ **B-03 · Editor IDE**: pestañas de archivos abiertos, paneles redimensionables, tema claro (Fase 2, todo pendiente). → spec 028.
+- ⬜ **B-04 · Informe en PDF** (plan §10.4 #17). Hay que justificar la dependencia (constitución IV.4). → spec 029.
+
+### Prioridad 2 — Decisiones que son del usuario
+
+- ❓ **B-05 · Privilegios (sudo)**: decidir cómo ejecuta la IA comandos con root (plan §10.2 #7). Opciones: pedir sudo por comando con aprobación; capabilities de nmap; o no permitir root. → spec 030 tras decidir.
+- ❓ **B-06 · "Automations"**: se quitó de la barra lateral. ¿Se quiere como spec (tareas programadas) o se descarta?
+
+### Prioridad 3 — Calidad y documentación
+
+- ⬜ **B-07 · Spec 007 (Monaco)**: falta el archivo; crearlo como documentación de lo construido. Además, el número 020 no existe: confirmar si se omitió a propósito.
+- ⬜ **B-08 · Monaco sin internet**: vendorizar el loader, igual que se hizo con marked/xterm.
+- ⬜ **B-09 · Pruebas de interfaz en el repo**: el E2E de navegador (Playwright) vive fuera del repo. Decidir si entra al CI.
+- ⬜ **B-10 · Ampliar la guarda de privacidad (025)**: IPv6 y lista de términos del engagement (nombres de cliente, dominios secundarios).
+- ⬜ **B-11 · Marcar checklists de 008–019** cuando se validen en la PC.
+
+### Prioridad 4 — Fase 8 y 5 (más adelante)
+
+- ⬜ **B-12 · Gestión de procesos de la terminal pty** en Detener (extiende spec 024 → spec 031).
+- ⬜ **B-13 · Fase 5 multimedia**: imágenes, video (fotogramas con ffmpeg), audio. Baja prioridad frente a pentest.
+- ⬜ **B-14 · Visor estructurado de resultados** (tabla de puertos desde nmap). Los parsers ya existen; falta la UI.
+
+---
+
+## Validaciones que solo puede hacer el usuario (PC)
+
+- ⬜ T001.10 · Chat con DeepHat real.
+- ⬜ T003.10 · Compilar el paquete en Parrot y validar la ventana nativa (incluye controles de ventana de spec 023).
+- ⬜ T008.8 · Gemini con API key real (incluye híbrido sin datos sensibles, spec 025).
+- ⬜ Spec 022 · Tool-calling de DeepHat (ver sección 022).
+- ⬜ Spec 024 · Detener con el modelo real en la PC (el E2E se probó con un Ollama de prueba).

@@ -21,7 +21,8 @@ _AUTO = {
 }
 
 # Siempre requieren aprobación, pase lo que pase.
-_ALWAYS_ASK = {"delete_path"}
+# set_target: fijar un objetivo exige confirmar la autorización por escrito (Spec 025).
+_ALWAYS_ASK = {"delete_path", "set_target"}
 
 
 def get_level(sid: str) -> str:

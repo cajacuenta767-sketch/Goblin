@@ -1,0 +1,83 @@
+"""
+Cancelación de la IA por sesión (Spec 024).
+
+El botón Detener marca la sesión como cancelada y mata los procesos de shell que
+GOBLIN tenga en curso (con todo su grupo de procesos). El bucle del agente comprueba
+la marca en cada paso y se detiene sin ejecutar nada más.
+
+Uso típico:
+  - agent.user_message() llama a clear(sid) y set_session(sid) al empezar.
+  - tools/shell.py llama a register(proc) / unregister(proc) alrededor de cada comando.
+  - main.py /api/stop llama a request(sid).
+"""
+import os
+import signal
+import subprocess
+import threading
+
+_lock = threading.Lock()
+_cancelled: set[str] = set()                    # sesiones con Detener pedido
+_procs: set[subprocess.Popen] = set()           # procesos de shell en curso
+_killed: set[subprocess.Popen] = set()          # procesos que matamos por Detener
+_current: str | None = None                     # sesión que está ejecutando herramientas
+
+
+def set_session(sid: str | None) -> None:
+    """Indica qué sesión está ejecutando herramientas (una a la vez)."""
+    global _current
+    _current = sid
+
+
+def clear(sid: str) -> None:
+    """Quita la marca de cancelación al empezar un turno nuevo."""
+    with _lock:
+        _cancelled.discard(sid)
+
+
+def is_cancelled(sid: str | None) -> bool:
+    return bool(sid) and sid in _cancelled
+
+
+def register(proc: subprocess.Popen) -> None:
+    with _lock:
+        _procs.add(proc)
+
+
+def unregister(proc: subprocess.Popen) -> None:
+    with _lock:
+        _procs.discard(proc)
+
+
+def was_killed(proc: subprocess.Popen) -> bool:
+    """True si el proceso fue matado por Detener. Consume la marca."""
+    with _lock:
+        if proc in _killed:
+            _killed.discard(proc)
+            return True
+        return False
+
+
+def kill_group(proc: subprocess.Popen) -> None:
+    """Mata el shell y todo lo que lanzó (requiere start_new_session=True)."""
+    try:
+        os.killpg(proc.pid, signal.SIGKILL)
+    except OSError:
+        try:
+            proc.kill()
+        except OSError:
+            pass
+
+
+def request(sid: str) -> int:
+    """Marca la sesión como cancelada y mata sus procesos de shell.
+
+    Devuelve cuántos procesos mató. Como GOBLIN atiende una sesión a la vez en el
+    shell, se matan todos los procesos registrados.
+    """
+    with _lock:
+        _cancelled.add(sid)
+        procs = list(_procs)
+        _killed.update(procs)
+    for p in procs:
+        kill_group(p)
+    return len(procs)

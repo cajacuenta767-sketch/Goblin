@@ -1,11 +1,14 @@
 """
 Herramienta de shell para GOBLIN.
 Ejecuta comandos con timeout y bloqueo duro de comandos peligrosos.
-(La terminal persistente/pty real llega en la Fase 3.)
+Cada comando corre en su propio grupo de procesos para poder detenerlo entero
+con el botón Detener (Spec 024).
+(La terminal persistente/pty real vive en terminal.py / term_session.py.)
 """
 import subprocess
 
 import config
+import cancel
 from .filesystem import resolve
 
 
@@ -24,17 +27,29 @@ def run_shell(command: str, cwd: str = ".") -> str:
         return f"Error con el directorio de trabajo: {e}"
 
     try:
-        result = subprocess.run(
+        proc = subprocess.Popen(
             command, shell=True, cwd=str(workdir),
-            capture_output=True, text=True, timeout=config.SHELL_TIMEOUT,
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
+            start_new_session=True,
         )
-    except subprocess.TimeoutExpired:
-        return f"TIMEOUT: el comando superó {config.SHELL_TIMEOUT}s y fue cancelado."
     except Exception as e:
         return f"Error ejecutando el comando: {e}"
 
-    out = (result.stdout or "") + (result.stderr or "")
+    cancel.register(proc)
+    try:
+        try:
+            stdout, stderr = proc.communicate(timeout=config.SHELL_TIMEOUT)
+        except subprocess.TimeoutExpired:
+            cancel.kill_group(proc)
+            proc.communicate()
+            return f"TIMEOUT: el comando superó {config.SHELL_TIMEOUT}s y fue cancelado."
+        if cancel.was_killed(proc):
+            return "CANCELADO: el usuario detuvo a GOBLIN y este comando se interrumpió."
+    finally:
+        cancel.unregister(proc)
+
+    out = (stdout or "") + (stderr or "")
     out = out.strip()
     if len(out) > 20000:
         out = out[:20000] + "\n[... salida truncada ...]"
-    return f"[exit {result.returncode}]\n{out}" if out else f"[exit {result.returncode}] (sin salida)"
+    return f"[exit {proc.returncode}]\n{out}" if out else f"[exit {proc.returncode}] (sin salida)"

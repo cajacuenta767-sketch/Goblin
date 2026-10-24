@@ -59,6 +59,9 @@ const API = {
   mode(sid) { return this._get("/api/mode?session_id=" + encodeURIComponent(sid)); },
   setMode(sid, mode) { return this._post("/api/mode", { session_id: sid, mode }); },
 
+  // Detener la respuesta en curso (Spec 024)
+  stop(sid) { return this._post("/api/stop", { session_id: sid }); },
+
   // Marketplace de herramientas
   toolstore() { return this._get("/api/toolstore"); },
   installTool(toolId) { return this._post("/api/toolstore/install", { tool_id: toolId }); },

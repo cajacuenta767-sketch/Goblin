@@ -5,7 +5,7 @@ const Approvals = {
   el: { box: null, text: null, ok: null, deny: null },
 
   // Herramientas destructivas → borde rojo
-  DANGEROUS: ["delete_path", "run_shell"],
+  DANGEROUS: ["delete_path", "run_shell", "set_target"],
 
   init() {
     this.el.box = document.getElementById("approval");
@@ -20,7 +20,11 @@ const Approvals = {
   show(resp) {
     const tool = resp.tool;
     const args = JSON.stringify(resp.args, null, 2);
-    this.el.text.textContent = `${tool}\n${args}`;
+    // Fijar un objetivo exige confirmar la autorización por escrito (Spec 025)
+    const aviso = tool === "set_target"
+      ? "⚠️ Confirma que tienes autorización POR ESCRITO para este objetivo antes de aprobar.\n\n"
+      : "";
+    this.el.text.textContent = `${aviso}${tool}\n${args}`;
     this.el.box.classList.toggle("danger", this.DANGEROUS.includes(tool));
     this.el.box.style.display = "block";
     Chat.scrollDown();

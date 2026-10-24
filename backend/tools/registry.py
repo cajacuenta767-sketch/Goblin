@@ -39,7 +39,7 @@ TOOLS = {
 # term_read solo lee; term_run ejecuta, así que pide aprobación.
 NEEDS_APPROVAL = {
     "write_file", "make_dir", "move_path", "copy_path", "delete_path", "run_shell",
-    "term_run",
+    "term_run", "set_target",   # set_target: confirmar autorización por escrito (Spec 025)
 }
 
 

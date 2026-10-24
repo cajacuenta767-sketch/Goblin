@@ -8,15 +8,22 @@ Diseño del bucle:
 - Las que requieren aprobación PAUSAN el bucle y devuelven {"type": "approval"}.
   El frontend muestra la caja de aprobación; al responder, se llama a approve().
 - Hay un tope de pasos (MAX_STEPS) para evitar bucles infinitos de un modelo 7B.
+- Detener (Spec 024): stop() marca la sesión; el bucle se corta en el siguiente
+  punto de control y la llamada al modelo se abandona sin esperarla.
+- Guarda de privacidad (Spec 025): en modo híbrido, si la conversación contiene datos
+  sensibles (IP, rango de red u objetivo activo), la respuesta la genera DeepHat local.
 """
 import json
 import sys
 import os
+import threading
 
 import config
 import db
 import router
 import approvals
+import cancel
+import state
 from ollama import Client
 from tools import SCHEMAS, NEEDS_APPROVAL, run_tool
 from text_toolcall import parse_text_toolcall
@@ -84,15 +91,29 @@ def _call_deephat(s: dict):
     return resp
 
 
+def _current_target() -> str:
+    try:
+        return state.get_target() or ""
+    except Exception:  # noqa: BLE001 - sin objetivo o estado no disponible
+        return ""
+
+
 def _call_model(s: dict, sid: str | None = None):
     """Aplica el router híbrido: elige modelo según el modo de la sesión.
     - local  -> DeepHat
-    - hybrid -> Gemini primero; si se niega o falla, DeepHat
+    - hybrid -> Gemini primero; si se niega o falla, DeepHat.
+                Si hay datos sensibles en la conversación, DeepHat siempre (Spec 025).
     - manual -> el modelo que el frontend ya fijó en s["model"] (DeepHat por defecto)
     """
     mode = router.get_mode(sid) if sid else "local"
 
     if mode == "hybrid" and router.gemini_available():
+        reason = router.sensitive_reason(s["messages"], _current_target())
+        if reason:
+            resp = _call_deephat(s)
+            resp._goblin_note = (f"🔒 Hay {reason} en la conversación: esta respuesta la generó "
+                                 "DeepHat en local. Gemini no recibió nada.")
+            return resp
         try:
             import gemini_client
             resp = gemini_client.chat(s["messages"], SCHEMAS)
@@ -110,6 +131,31 @@ def _call_model(s: dict, sid: str | None = None):
     return _call_deephat(s)
 
 
+def _call_interruptible(fn, sid: str | None):
+    """Ejecuta fn() en un hilo y espera el resultado, pero sale en cuanto se pide Detener.
+
+    Devuelve (resultado, cancelado). Si se cancela, el hilo termina solo y su resultado
+    se descarta. Así el botón Detener responde al instante aunque el modelo siga generando.
+    """
+    box: dict = {}
+
+    def worker():
+        try:
+            box["value"] = fn()
+        except Exception as e:  # noqa: BLE001 - se vuelve a lanzar en el hilo principal
+            box["error"] = e
+
+    t = threading.Thread(target=worker, daemon=True)
+    t.start()
+    while t.is_alive():
+        t.join(0.2)
+        if cancel.is_cancelled(sid):
+            return None, True
+    if "error" in box:
+        raise box["error"]
+    return box.get("value"), False
+
+
 def _exec(call, sid: str | None = None, approved: bool = True) -> dict:
     name = call.function.name
     args = dict(call.function.arguments or {})
@@ -123,9 +169,21 @@ def _exec(call, sid: str | None = None, approved: bool = True) -> dict:
     return {"name": name, "args": args, "result": result}
 
 
+def _stopped(s: dict) -> dict:
+    """Cierra el turno por Detener: vacía la cola y reinicia el contador de pasos."""
+    s["queue"] = []
+    s["steps"] = 0
+    return {"type": "stopped", "content": "Detenido por el usuario. Pídeme lo que sigue cuando quieras.",
+            "model": s.get("model")}
+
+
 def _step(s: dict, sid: str | None = None) -> dict:
     """Avanza el agente hasta texto final, una aprobación pendiente, o el tope de pasos."""
     while True:
+        # 0) ¿El usuario pidió Detener? No se ejecuta nada más.
+        if cancel.is_cancelled(sid):
+            return _stopped(s)
+
         # 1) ¿Hay herramientas en cola por ejecutar?
         if s["queue"]:
             call = s["queue"][0]
@@ -154,12 +212,15 @@ def _step(s: dict, sid: str | None = None) -> dict:
 
         # 3) Preguntar al modelo (router híbrido decide cuál)
         try:
-            resp = _call_model(s, sid)
+            resp, cancelled = _call_interruptible(lambda: _call_model(s, sid), sid)
         except Exception as e:
             return {"type": "error", "content": f"Error al contactar el modelo: {e}. "
                                                f"¿Está Ollama corriendo y el modelo descargado?"}
+        if cancelled:
+            return _stopped(s)
         msg = resp.message
         used_model = getattr(resp, "_goblin_model", "DeepHat")
+        note = getattr(resp, "_goblin_note", None)
         s["messages"].append(msg)
 
         if not msg.tool_calls:
@@ -177,11 +238,21 @@ def _step(s: dict, sid: str | None = None) -> dict:
                     db.add_message(sid, "assistant", msg.content or "", used_model)
                 except Exception:
                     pass
-            return {"type": "text", "content": msg.content or "", "model": used_model}
+            out = {"type": "text", "content": msg.content or "", "model": used_model}
+            if note:
+                out["note"] = note
+            return out
         s["queue"] = list(msg.tool_calls)
 
 
+def _begin_turn(sid: str) -> None:
+    """Un turno nuevo borra cualquier Detener anterior y fija la sesión de herramientas."""
+    cancel.clear(sid)
+    cancel.set_session(sid)
+
+
 def user_message(sid: str, text: str, model: str | None = None) -> dict:
+    _begin_turn(sid)
     s = get_session(sid, model)
     # Las herramientas de pentest y de terminal usan esta sesión.
     try:
@@ -206,6 +277,7 @@ def user_message(sid: str, text: str, model: str | None = None) -> dict:
 
 
 def approve(sid: str, approved: bool) -> dict:
+    _begin_turn(sid)
     s = get_session(sid)
     if not s["queue"]:
         return {"type": "text", "content": "No hay acciones pendientes de aprobación.",
@@ -226,15 +298,25 @@ def approve(sid: str, approved: bool) -> dict:
     return _step(s, sid)
 
 
+def stop(sid: str) -> dict:
+    """Detener (Spec 024): marca la sesión, mata el shell en curso y vacía la cola."""
+    procesos = cancel.request(sid)
+    s = sessions.get(sid)
+    if s:
+        s["queue"] = []
+    return {"ok": True, "procesos_detenidos": procesos}
+
+
 def reset_session(sid: str) -> None:
     sessions.pop(sid, None)
 
 
 def stream_message(sid: str, text: str, model: str | None = None):
     """Versión en streaming (Spec 018). Devuelve un generador de trozos de texto.
-    Si la IA pide herramientas, cambia al flujo normal (señala 'tool' y el cliente
+    Si la IA pide herramientas, cambia al flujo normal (señala 'fallback' y el cliente
     reenvía por /api/chat). Solo hace streaming real del texto final.
     """
+    _begin_turn(sid)
     s = get_session(sid, model)
     try:
         from tools import pentest
@@ -261,10 +343,15 @@ def stream_message(sid: str, text: str, model: str | None = None):
 
     # Primer sondeo SIN stream para saber si pedirá herramientas.
     try:
-        probe = client.chat(model=s["model"], messages=s["messages"], tools=SCHEMAS,
-                            options={"num_ctx": config.NUM_CTX}, keep_alive=config.KEEP_ALIVE)
+        probe, cancelled = _call_interruptible(
+            lambda: client.chat(model=s["model"], messages=s["messages"], tools=SCHEMAS,
+                                options={"num_ctx": config.NUM_CTX}, keep_alive=config.KEEP_ALIVE),
+            sid)
     except Exception as e:
         yield {"type": "error", "content": f"Error al contactar el modelo: {e}"}
+        return
+    if cancelled:
+        yield {"type": "stopped", "content": "Detenido por el usuario.", "model": s["model"]}
         return
 
     if probe.message.tool_calls:
@@ -277,15 +364,31 @@ def stream_message(sid: str, text: str, model: str | None = None):
     # Respuesta de texto: re-pedimos en streaming para transmitir token a token.
     full = ""
     try:
-        for chunk in client.chat(model=s["model"], messages=s["messages"],
-                                 options={"num_ctx": config.NUM_CTX},
-                                 keep_alive=config.KEEP_ALIVE, stream=True):
+        stream = client.chat(model=s["model"], messages=s["messages"],
+                             options={"num_ctx": config.NUM_CTX},
+                             keep_alive=config.KEEP_ALIVE, stream=True)
+        for chunk in stream:
+            if cancel.is_cancelled(sid):
+                close = getattr(stream, "close", None)   # corta la generación en Ollama
+                if callable(close):
+                    close()
+                break
             piece = chunk.message.content or ""
             if piece:
                 full += piece
                 yield {"type": "token", "content": piece}
     except Exception as e:
         yield {"type": "error", "content": f"Error en streaming: {e}"}
+        return
+
+    if cancel.is_cancelled(sid):
+        # Se guarda lo que alcanzó a generarse, marcado como detenido.
+        s["messages"].append({"role": "assistant", "content": full})
+        try:
+            db.add_message(sid, "assistant", (full + "\n[detenido]").strip(), "DeepHat")
+        except Exception:
+            pass
+        yield {"type": "stopped", "content": "Detenido por el usuario.", "model": s["model"]}
         return
 
     s["messages"].append({"role": "assistant", "content": full})

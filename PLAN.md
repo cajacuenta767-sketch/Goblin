@@ -132,7 +132,7 @@
   Markdown/PDF a partir de los hallazgos de la sesión. (La parte más tediosa, automatizada.)
 - ⬜ **Log de auditoría** ⭐: cada comando/acción que ejecuta la IA queda registrado con
   timestamp (qué, cuándo, resultado). Trazabilidad total, exportable, alimenta el informe.
-- ⬜ **Botón de Pánico / Stop** ⭐: mata cualquier proceso que la IA tenga corriendo
+- 🟨 **Botón de Pánico / Stop** ⭐ (Spec 024, parcial: detiene la IA y los shells que lanzó; faltan los procesos de la terminal pty): mata cualquier proceso que la IA tenga corriendo
   (escaneo desbocado, bucle del agente). Grande y siempre visible.
 - ⬜ **Snippets / comandos rápidos**: biblioteca de one-liners del usuario (reverse shells,
   LinPEAS, transferencia de archivos, pivoting). Clic → se insertan.
@@ -455,18 +455,18 @@ ia-ide/
 7. ⬜ **Permisos sudo controlados.** Muchas herramientas de pentest (nmap SYN scan, tcpdump)
    necesitan root. Decidir: ¿GOBLIN pide sudo por comando? ¿Corre con capabilities? Definir
    cómo la IA ejecuta cosas privilegiadas SIN que corras toda la app como root (peligroso).
-8. ⬜ **Autoaprobación configurable por tipo.** Pediste control total sin fricción, pero
+8. ✅ **Autoaprobación configurable por tipo.** (Spec 009) Pediste control total sin fricción, pero
    aprobar cada acción cansa. Solución: niveles — "auto" para crear/leer/listar, "preguntar"
    solo para borrar/sudo/comandos destructivos. Configurable en Settings.
 
 ### 10.3. 🟡 ROBUSTEZ — para que no se rompa
 
-9. ⬜ **Límite de iteraciones del agente.** Un modelo 7B puede entrar en bucle (llamar la
+9. ✅ **Límite de iteraciones del agente y botón Detener (Spec 024).** Un modelo 7B puede entrar en bucle (llamar la
    misma herramienta sin parar). Poner tope (ej. 15 pasos) y botón de "Detener".
 10. ⬜ **Manejo de errores de Ollama/Gemini.** ¿Qué pasa si Ollama no está corriendo, el
     modelo no está descargado, o se cae la red (Gemini)? El backend debe dar mensajes claros,
     no reventar.
-11. ⬜ **Timeouts.** Un comando shell que cuelga (ej. `nmap` a toda una red) no debe congelar
+11. 🟨 **Timeouts.** (shell cancelable ✅ Spec 024; terminal pty pendiente). Un comando shell que cuelga (ej. `nmap` a toda una red) no debe congelar
     la app. El MVP ya tiene timeout de 180s en shell; ajustar y hacerlo cancelable.
 12. ⬜ **Persistencia de sesiones.** Ahora las conversaciones viven en RAM y se pierden al
     cerrar. Guardarlas en SQLite o JSON en disco (Fase 4).
@@ -551,3 +551,4 @@ ia-ide/
   con **Tauri v2** como app de escritorio para Parrot (ventana propia, icono, instalador .deb).
   Spec 003 creada e implementada (config lista; se compila en Parrot). El modo navegador queda
   solo para desarrollo. Proyecto conectado y subido a GitHub (cajacuenta767-sketch/Goblin).
+- 🔵 **v1.5** — Análisis de pendientes contra el SDD. Implementadas **Spec 024** (botón Detener: corta la IA, la cola de aprobación y los shells en curso, también en streaming) y **Spec 025** (guardas: en modo híbrido, IP / rango de red / objetivo activo fuerzan DeepHat local con nota; `set_target` pide autorización por escrito en todos los niveles). Specs 023 documentada.
