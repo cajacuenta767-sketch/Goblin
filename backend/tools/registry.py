@@ -9,6 +9,7 @@ from . import pentest as pt
 from . import targets as tg
 from . import snippets_tool as sn
 from . import scan_tool as sc
+from . import terminal_tool as tt
 
 TOOLS = {
     "list_dir": fs.list_dir,
@@ -29,12 +30,16 @@ TOOLS = {
     "get_snippet": sn.get_snippet,
     "parse_nmap": sc.parse_nmap,
     "parse_nikto": sc.parse_nikto,
+    "term_run": tt.term_run,
+    "term_read": tt.term_read,
 }
 
 # Herramientas que modifican/ejecutan: requieren aprobación del usuario.
 # add_finding y generate_report NO requieren aprobación (solo registran/leen datos).
+# term_read solo lee; term_run ejecuta, así que pide aprobación.
 NEEDS_APPROVAL = {
     "write_file", "make_dir", "move_path", "copy_path", "delete_path", "run_shell",
+    "term_run",
 }
 
 
@@ -121,4 +126,15 @@ SCHEMAS = [
     _t("parse_nikto",
        "Parsea la salida de nikto (texto o ruta a archivo) y extrae los hallazgos web.",
        {"output": {"type": S, "description": "Salida de nikto o ruta al archivo"}}, ["output"]),
+    _t("term_run",
+       "Ejecuta un comando en la TERMINAL VIVA de la sesión (la misma que ve el usuario). "
+       "A diferencia de run_shell, mantiene el estado: cd, variables y procesos en segundo "
+       "plano persisten. Úsalo para listeners, sesiones interactivas o cuando necesites "
+       "que el directorio persista entre comandos.",
+       {"command": {"type": S, "description": "Comando a ejecutar en la terminal viva"}},
+       ["command"]),
+    _t("term_read",
+       "Lee la salida reciente de la terminal viva, incluido lo que escribió el usuario. "
+       "Úsalo para ver el resultado de un comando que corre, o lo que hizo el usuario.",
+       {}, []),
 ]

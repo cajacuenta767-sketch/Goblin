@@ -168,10 +168,12 @@ def _step(s: dict, sid: str | None = None) -> dict:
 
 def user_message(sid: str, text: str, model: str | None = None) -> dict:
     s = get_session(sid, model)
-    # Las herramientas de pentest guardan en esta sesión.
+    # Las herramientas de pentest y de terminal usan esta sesión.
     try:
         from tools import pentest
         pentest.set_session(sid)
+        import term_session
+        term_session.set_session(sid)
     except Exception:
         pass
     s["messages"].append({"role": "user", "content": text})
