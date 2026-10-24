@@ -22,9 +22,11 @@ workspace/
 *.log
 logs/
 
-# Archivos del sistema operativo
+# Archivos del sistema operativo y empaquetados locales
 .DS_Store
 Thumbs.db
+*.tar.gz
+goblin
 
 # Editores
 .vscode/
