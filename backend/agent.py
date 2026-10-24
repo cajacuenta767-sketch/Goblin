@@ -16,6 +16,7 @@ import os
 import config
 import db
 import router
+import approvals
 from ollama import Client
 from tools import SCHEMAS, NEEDS_APPROVAL, run_tool
 
@@ -111,7 +112,8 @@ def _step(s: dict, sid: str | None = None) -> dict:
         if s["queue"]:
             call = s["queue"][0]
             name = call.function.name
-            if name in NEEDS_APPROVAL:
+            base = name in NEEDS_APPROVAL
+            if approvals.needs_approval(sid, name, base):
                 return {
                     "type": "approval",
                     "tool": name,

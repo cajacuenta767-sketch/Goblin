@@ -132,6 +132,8 @@ body {
 .iconbtn { width: 30px; height: 30px; border-radius: 7px; background: var(--panel-2); border: 1px solid var(--line); color: var(--text-dim); cursor: pointer; display: grid; place-items: center; font-size: 15px; }
 .iconbtn.send { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
 .iconbtn:hover { border-color: var(--accent-dim); }
+.iconbtn.listening { background: var(--red); border-color: var(--red); animation: micpulse 1s infinite; }
+@keyframes micpulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
 
 /* --- Panel derecho: explorador --- */
 #right { width: 300px; background: var(--panel); border-left: 1px solid var(--line); display: flex; flex-direction: column; flex-shrink: 0; }

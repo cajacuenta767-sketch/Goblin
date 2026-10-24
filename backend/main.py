@@ -148,6 +148,24 @@ def mode_set(body: ModeIn):
     return {"mode": m, "gemini_available": router.gemini_available(), "warning": warn}
 
 
+# ---------- Nivel de autoaprobación (Spec 009) ----------
+class LevelIn(BaseModel):
+    session_id: str = "main"
+    level: str  # cauto / normal / confianza
+
+
+@app.get("/api/approval-level")
+def level_get(session_id: str = "main"):
+    import approvals
+    return {"level": approvals.get_level(session_id)}
+
+
+@app.post("/api/approval-level")
+def level_set(body: LevelIn):
+    import approvals
+    return {"level": approvals.set_level(body.session_id, body.level)}
+
+
 @app.get("/api/target")
 def get_target():
     return {"target": state.get_target()}

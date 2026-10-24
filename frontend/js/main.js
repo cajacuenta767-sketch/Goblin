@@ -13,6 +13,7 @@ const App = {
     Editor.init();
     Explorer.init();
     Terminal_.init();
+    if (window.Voice) Voice.init();
     this.wireUI();
     await this.loadInfo();
     await this.refreshStatus();

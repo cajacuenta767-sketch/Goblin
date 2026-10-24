@@ -101,8 +101,28 @@
 - ✅ T008.7 — Validado: modo por defecto local, híbrido sin key avisa y usa DeepHat
 - ⬜ T008.8 — Probar Gemini real con API key (requiere key del usuario)
 
-## Próximas specs (aún sin escribir)
+## Spec 009 — Autoaprobación por niveles ✅
 
-- 009 — Dictado por voz (Whisper local, Fase 5)
-- 010 — Autoaprobación configurable por niveles
-- Frontend: panel de hallazgos + sidebar de sesiones reales (pendiente de cablear en UI)
+- ✅ T009.1 — backend/approvals.py (niveles cauto/normal/confianza)
+- ✅ T009.2 — agent.py consulta el nivel antes de pedir aprobación
+- ✅ T009.3 — main.py: endpoint /api/approval-level
+- ✅ T009.4 — Validado: delete SIEMPRE pide (incluso en confianza); lista negra siempre aplica
+
+## Spec 010 — Dictado por voz ✅
+
+- ✅ T010.1 — frontend/js/voice.js (Web Speech API, sin Whisper para ahorrar RAM)
+- ✅ T010.2 — Micrófono con indicador "escuchando" (rojo pulsante)
+- ✅ T010.3 — Reconocimiento en español, avisa si el navegador no soporta
+- ✅ T010.4 — Validado: voice.js se sirve y se inicializa
+
+## ✅ TODAS LAS SPECS PRINCIPALES COMPLETAS
+
+Pendiente de cablear en la UI (backend listo, falta frontend):
+- Sidebar de sesiones reales (endpoints /api/sessions ya existen)
+- Panel de hallazgos visual (endpoints /api/findings ya existen)
+- Botón de generar informe (endpoint /api/report ya existe)
+
+Validaciones que requieren la PC del usuario:
+- Compilar el .deb en Parrot
+- Probar chat con DeepHat real
+- Probar Gemini con API key real
