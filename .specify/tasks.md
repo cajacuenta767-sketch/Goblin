@@ -82,6 +82,18 @@ Cada spec tiene su checklist sin marcar. No se marca hasta validarla en la PC.
 
 ---
 
+## Spec 027 — Instalar con contraseña en la app y registro en vivo — 🟨
+
+- ✅ Diálogo propio para la contraseña de sudo: se usa una vez con `sudo -S` y no se guarda ni se registra.
+- ✅ Contraseña incorrecta: el diálogo vuelve a pedirla con el aviso.
+- ✅ Registro de apt en vivo, cancelar (menos de 10 s) y un solo trabajo a la vez.
+- ✅ Desinstalar con `apt-get remove` y la misma confirmación.
+- ✅ Pruebas: 8 del backend de trabajos (sudo y apt simulados) y E2E de navegador 18/18.
+- ⬜ PC: instalar y desinstalar con el sudo real desde la app nativa.
+- ⚠️ Límite: si se reinicia el backend se pierde el registro de trabajos; cancelar con SIGKILL puede dejar un bloqueo de apt.
+
+---
+
 ## Infraestructura (transversal) — ✅
 
 - ✅ `scripts/install.sh`, `run.sh`, `build.sh`, `install-nativo.sh`, `subir-github.sh`.

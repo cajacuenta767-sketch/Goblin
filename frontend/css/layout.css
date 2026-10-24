@@ -227,6 +227,25 @@ button.ts-dl { background: none; cursor: pointer; font: inherit; font-size: 11px
 .ts-msg:empty { display: none; }
 .ts-msg.ok { color: var(--accent); }
 .ts-msg.err { color: var(--red); }
+/* Spec 027: diálogo de contraseña, panel de instalaciones y desinstalar */
+.ts-dl:disabled { opacity: 0.5; cursor: default; }
+.ts-btn.danger { background: transparent; color: var(--red); border-color: var(--red); }
+.ts-modal { position: fixed; inset: 0; z-index: 2000; background: rgba(0, 0, 0, 0.6); display: none; align-items: center; justify-content: center; }
+.ts-modal.show { display: flex; }
+.ts-dialog { width: 380px; max-width: 92vw; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 18px; display: flex; flex-direction: column; gap: 10px; }
+.ts-dialog-title { font-weight: 600; font-size: 14px; }
+.ts-dialog-text { font-size: 12px; color: var(--text-dim); line-height: 1.4; }
+.ts-pass { padding: 8px 10px; background: var(--bg); border: 1px solid var(--line); border-radius: 6px; color: inherit; font-size: 13px; }
+.ts-pass:focus { outline: none; border-color: var(--accent); }
+.ts-dialog-err { font-size: 11px; color: var(--red); min-height: 14px; }
+.ts-dialog-note { font-size: 10px; color: var(--text-faint); }
+.ts-dialog .ts-confirm-row { margin-top: 0; }
+.ts-jobs { margin: 0 18px 10px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); }
+.ts-jobs-head { display: flex; align-items: center; gap: 10px; font-size: 12px; }
+.ts-jobs-head .ts-btn { padding: 4px 10px; }
+.ts-jobs-title { font-weight: 600; white-space: nowrap; }
+.ts-jobs-status { color: var(--text-dim); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ts-jobs-log { margin: 8px 0 0; max-height: 150px; overflow-y: auto; font-family: "JetBrains Mono", monospace; font-size: 11px; color: var(--text-dim); white-space: pre-wrap; }
 
 /* scrollbars */
 ::-webkit-scrollbar { width: 9px; height: 9px; }

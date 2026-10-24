@@ -67,6 +67,14 @@ const API = {
   installTool(toolId) { return this._post("/api/toolstore/install", { tool_id: toolId }); },
   // Abre la web oficial de la herramienta en el navegador del sistema (Spec 026)
   openUrl(toolId) { return this._post("/api/toolstore/open", { tool_id: toolId }); },
+  // Trabajos de instalación con contraseña en la app y registro en vivo (Spec 027)
+  startToolJob(toolId, action) { return this._post("/api/toolstore/jobs", { tool_id: toolId, action }); },
+  toolJobs() { return this._get("/api/toolstore/jobs"); },
+  toolJob(jobId) { return this._get("/api/toolstore/jobs/" + encodeURIComponent(jobId)); },
+  submitToolJobPassword(jobId, password) {
+    return this._post("/api/toolstore/jobs/" + encodeURIComponent(jobId) + "/password", { password });
+  },
+  cancelToolJob(jobId) { return this._post("/api/toolstore/jobs/" + encodeURIComponent(jobId) + "/cancel", {}); },
 
   // Modelos instalados en Ollama
   models() { return this._get("/api/models"); },

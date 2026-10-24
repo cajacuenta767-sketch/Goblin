@@ -214,6 +214,51 @@ def toolstore_open(body: ToolIn):
     return toolstore.open_url(body.tool_id)
 
 
+# ---------- Instalación con contraseña en la app y registro en vivo (Spec 027) ----------
+class JobIn(BaseModel):
+    tool_id: str
+    action: str = "install"   # install / remove
+
+
+class PasswordIn(BaseModel):
+    password: str             # se usa UNA vez en sudo -S y se descarta; nunca se registra
+
+
+@app.post("/api/toolstore/jobs")
+def toolstore_job_start(body: JobIn):
+    """Inicia instalar o desinstalar. Si sudo pide contraseña, el trabajo queda esperándola."""
+    import toolstore_jobs
+    return toolstore_jobs.start_job(body.tool_id, body.action)
+
+
+@app.get("/api/toolstore/jobs")
+def toolstore_jobs_list():
+    import toolstore_jobs
+    return {"ok": True, "jobs": toolstore_jobs.list_jobs()}
+
+
+@app.get("/api/toolstore/jobs/{job_id}")
+def toolstore_job_get(job_id: str):
+    import toolstore_jobs
+    job = toolstore_jobs.get_job(job_id)
+    if job is None:
+        return {"ok": False, "error": "Trabajo no encontrado."}
+    return {"ok": True, "job": job}
+
+
+@app.post("/api/toolstore/jobs/{job_id}/password")
+def toolstore_job_password(job_id: str, body: PasswordIn):
+    """Entrega la contraseña a sudo una vez. La respuesta nunca la incluye."""
+    import toolstore_jobs
+    return toolstore_jobs.submit_password(job_id, body.password)
+
+
+@app.post("/api/toolstore/jobs/{job_id}/cancel")
+def toolstore_job_cancel(job_id: str):
+    import toolstore_jobs
+    return toolstore_jobs.cancel_job(job_id)
+
+
 @app.get("/api/target")
 def get_target():
     return {"target": state.get_target()}

@@ -1,6 +1,7 @@
 # Spec 026 — Marketplace: instalación por terminal y catálogo ampliado
 
 **Estado:** 🟨 En progreso · **Tipo:** funcionalidad · **Depende de:** 004, 016, 020
+**Reemplazado en parte por:** Spec 027 (RF2: la contraseña ahora se pide en un diálogo de la app y se usa una sola vez; la terminal queda como alternativa)
 **Referencias:** constitución (acciones privilegiadas o destructivas requieren aprobación) · PLAN §10.2 #7 (estrategia de sudo, pendiente; esta spec no la decide)
 
 ## Problema

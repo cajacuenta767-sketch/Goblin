@@ -41,6 +41,8 @@ def _tool(tid, name, category, binary, pkg, desc, url, logo="", verified=True, p
         "verified": verified,
         # command: lo que se escribe en la terminal; None si no hay paquete apt.
         "command": _command(pkg) if pkg else None,
+        # remove_command: lo que se muestra al desinstalar (Spec 027).
+        "remove_command": f"sudo apt-get remove -y {pkg}" if pkg else None,
     }
 
 
