@@ -7,6 +7,7 @@ from . import filesystem as fs
 from . import shell as sh
 from . import pentest as pt
 from . import targets as tg
+from . import snippets_tool as sn
 
 TOOLS = {
     "list_dir": fs.list_dir,
@@ -24,6 +25,7 @@ TOOLS = {
     "set_target": tg.set_target,
     "clear_target": tg.clear_target,
     "get_target": tg.get_target,
+    "get_snippet": sn.get_snippet,
 }
 
 # Herramientas que modifican/ejecutan: requieren aprobación del usuario.
@@ -105,4 +107,8 @@ SCHEMAS = [
        {"target": {"type": S, "description": "IP o dominio del objetivo"}}, ["target"]),
     _t("clear_target", "Limpia el objetivo actual del pentest.", {}, []),
     _t("get_target", "Muestra el objetivo actual del pentest.", {}, []),
+    _t("get_snippet",
+       "Devuelve snippets/one-liners de pentest de una categoría (reverse_shell, listener, "
+       "transfer, tty_upgrade, recon, privesc). Sin categoría, lista las disponibles.",
+       {"category": {"type": S, "description": "Categoría de snippet"}}, []),
 ]
