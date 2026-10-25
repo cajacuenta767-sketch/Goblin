@@ -61,6 +61,26 @@ def init() -> None:
             approved   INTEGER,
             created_at REAL
         );
+        CREATE TABLE IF NOT EXISTS scope (
+            id         INTEGER PRIMARY KEY AUTOINCREMENT,
+            session_id TEXT,
+            kind       TEXT,
+            entry      TEXT,
+            created_at REAL,
+            UNIQUE(session_id, kind, entry)
+        );
+        CREATE TABLE IF NOT EXISTS hosts (
+            id         INTEGER PRIMARY KEY AUTOINCREMENT,
+            session_id TEXT,
+            host       TEXT,
+            port       TEXT,
+            proto      TEXT,
+            state      TEXT,
+            service    TEXT,
+            version    TEXT,
+            created_at REAL,
+            UNIQUE(session_id, host, port, proto)
+        );
         """)
 
 
@@ -103,6 +123,8 @@ def delete_session(sid: str) -> None:
     with _conn() as c:
         c.execute("DELETE FROM messages WHERE session_id=?", (sid,))
         c.execute("DELETE FROM findings WHERE session_id=?", (sid,))
+        c.execute("DELETE FROM scope WHERE session_id=?", (sid,))
+        c.execute("DELETE FROM hosts WHERE session_id=?", (sid,))
         c.execute("DELETE FROM sessions WHERE id=?", (sid,))
 
 
@@ -165,3 +187,50 @@ def get_audit(sid: str) -> list[dict]:
     with _conn() as c:
         rows = c.execute("SELECT * FROM audit_log WHERE session_id=? ORDER BY id", (sid,)).fetchall()
         return [dict(r) for r in rows]
+
+
+# ---------- Alcance y términos sensibles (Spec 036, 038) ----------
+def add_scope(sid: str, kind: str, entry: str) -> None:
+    """kind = 'scope' (objetivos autorizados) o 'term' (términos sensibles, nunca a la nube)."""
+    with _conn() as c:
+        c.execute(
+            "INSERT OR IGNORE INTO scope (session_id, kind, entry, created_at) VALUES (?,?,?,?)",
+            (sid, kind, entry, time.time()),
+        )
+
+
+def list_scope(sid: str, kind: str = "scope") -> list[str]:
+    with _conn() as c:
+        rows = c.execute(
+            "SELECT entry FROM scope WHERE session_id=? AND kind=? ORDER BY id", (sid, kind)
+        ).fetchall()
+        return [r["entry"] for r in rows]
+
+
+def remove_scope(sid: str, kind: str, entry: str) -> None:
+    with _conn() as c:
+        c.execute("DELETE FROM scope WHERE session_id=? AND kind=? AND entry=?", (sid, kind, entry))
+
+
+# ---------- Hosts y puertos (Spec 036, RF7) ----------
+def upsert_hosts(sid: str, records: list[dict]) -> int:
+    """Guarda puertos abiertos de nmap. Repetir un escaneo actualiza versión y estado."""
+    with _conn() as c:
+        for r in records:
+            c.execute(
+                "INSERT OR REPLACE INTO hosts (session_id, host, port, proto, state, service, version, created_at)"
+                " VALUES (?,?,?,?,?,?,?,?)",
+                (sid, r.get("host", ""), str(r.get("port", "")), r.get("proto", "tcp"),
+                 r.get("state", "open"), r.get("service", ""), r.get("version", ""), time.time()),
+            )
+    return len(records)
+
+
+def list_hosts(sid: str) -> list[dict]:
+    with _conn() as c:
+        rows = c.execute(
+            "SELECT host, port, proto, state, service, version FROM hosts WHERE session_id=?"
+            " ORDER BY host, CAST(port AS INTEGER)", (sid,)
+        ).fetchall()
+        return [dict(r) for r in rows]
+

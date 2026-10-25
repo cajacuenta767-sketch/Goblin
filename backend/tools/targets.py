@@ -22,6 +22,16 @@ def set_target(target: str) -> str:
     if not target:
         return "El target no puede estar vacío."
     state.set_target(target)
+    # El objetivo que el usuario aprobó entra al alcance de la sesión (Spec 036, RF1).
+    try:
+        import db
+        import scope
+        import pentest as pt
+        entrada = scope.normalize_entry(target)
+        if entrada:
+            db.add_scope(pt.current_sid(), "scope", entrada)
+    except Exception:
+        pass   # si la base falla, el objetivo queda fijado igual
     # Crear estructura del engagement
     base = config.WORKSPACE / "engagements" / _safe_name(target)
     created = []

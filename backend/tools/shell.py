@@ -5,6 +5,7 @@ Cada comando corre en su propio grupo de procesos para poder detenerlo entero
 con el botón Detener (Spec 024).
 (La terminal persistente/pty real vive en terminal.py / term_session.py.)
 """
+import re
 import subprocess
 
 import config
@@ -12,9 +13,48 @@ import cancel
 from .filesystem import resolve
 
 
+_RAIZ_RM = {"/", "/*", "~", "~/", "*", "/.", "$home", "${home}"}
+_APAGADO = {"shutdown", "reboot", "halt", "poweroff"}
+
+
+def _normalizar(command: str) -> str:
+    """Minúsculas, sin comillas y con espacios colapsados: "RM  -rf '/'" → "rm -rf /"."""
+    return re.sub(r"\s+", " ", command.replace('"', "").replace("'", "").lower()).strip()
+
+
+def _segmentos(cmd: str) -> list[list[str]]:
+    """Comandos separados por ; && || | y saltos de línea, cada uno como lista de palabras."""
+    out = []
+    for parte in re.split(r"[;&|\n]+", cmd):
+        palabras = [p for p in parte.split() if p not in ("sudo", "env", "exec", "nohup", "time")]
+        if palabras:
+            out.append(palabras)
+    return out
+
+
+def _es_rm_recursivo_raiz(palabras: list[str]) -> bool:
+    if not palabras or palabras[0].rsplit("/", 1)[-1] != "rm":
+        return False
+    flags = [p for p in palabras[1:] if p.startswith("-")]
+    recursivo = any("r" in f.lower() for f in flags if not f.startswith("--")) or "--recursive" in flags
+    rutas = [p for p in palabras[1:] if not p.startswith("-")]
+    return recursivo and any(r in _RAIZ_RM for r in rutas)
+
+
 def _is_blocked(command: str) -> bool:
-    cmd = command.strip()
-    return any(bad in cmd for bad in config.BLOCKED_PATTERNS)
+    cmd = _normalizar(command)
+    if any(_normalizar(bad) in cmd for bad in config.BLOCKED_PATTERNS):
+        return True
+    if re.search(r"\bmkfs(\.\w+)?\b", cmd) or re.search(r"\bdd\b.*\bof=/dev/", cmd):
+        return True
+    if re.search(r":\(\)\s*\{\s*:\|:&\s*\};:", cmd) or re.search(r">\s*/dev/sd[a-z]", cmd):
+        return True
+    for palabras in _segmentos(cmd):
+        if palabras[0].rsplit("/", 1)[-1] in _APAGADO:
+            return True
+        if _es_rm_recursivo_raiz(palabras):
+            return True
+    return False
 
 
 def run_shell(command: str, cwd: str = ".") -> str:

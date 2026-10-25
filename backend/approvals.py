@@ -16,13 +16,15 @@ VALID_LEVELS = {"cauto", "normal", "confianza"}
 # delete_path nunca aparece aquí: siempre pide.
 _AUTO = {
     "cauto":     set(),
-    "normal":    {"write_file", "make_dir", "move_path", "copy_path"},
-    "confianza": {"write_file", "make_dir", "move_path", "copy_path", "run_shell"},
+    "normal":    {"write_file", "make_dir", "move_path", "copy_path", "edit_lines"},
+    "confianza": {"write_file", "make_dir", "move_path", "copy_path", "edit_lines", "run_shell"},
 }
 
 # Siempre requieren aprobación, pase lo que pase.
 # set_target: fijar un objetivo exige confirmar la autorización por escrito (Spec 025).
-_ALWAYS_ASK = {"delete_path", "set_target"}
+_ALWAYS_ASK = {"delete_path", "set_target", "chmod", "http_get", "git_ops"}
+# git status y log solo leen: no piden aprobación (Spec 039, RF4).
+_GIT_LECTURA = {"status", "log"}
 
 
 def get_level(sid: str) -> str:
@@ -68,6 +70,8 @@ def needs_approval(sid: str, tool: str, base_needs_approval: bool, args: dict | 
     """True si la herramienta debe pedir aprobación al usuario."""
     if not base_needs_approval:
         return False               # herramientas de solo lectura: nunca piden
+    if tool == "git_ops" and str((args or {}).get("action", "")).lower() in _GIT_LECTURA:
+        return False
     if tool in _ALWAYS_ASK:
         return True                # delete siempre pide
     if tool == "run_shell" and is_security_command((args or {}).get("command", "")):

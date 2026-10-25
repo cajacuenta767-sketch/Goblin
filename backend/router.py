@@ -8,6 +8,7 @@ Modos:
 Por seguridad y privacidad, el modo por defecto es "local": nada sale a la nube salvo que
 el usuario active explícitamente el modo híbrido (constitución, art. II).
 """
+import ipaddress
 import re
 
 import config
@@ -79,18 +80,40 @@ def needs_local_intent(text: str) -> bool:
     return bool(_PENTEST_RE.search(text or ""))
 
 
-def sensitive_reason(messages, target: str = "") -> str | None:
-    """Qué dato sensible aparece en TODO el historial, o None (Spec 025).
+# Candidatos a IPv6: se validan con ipaddress para no marcar horas como "12:30:45".
+_V6_CANDIDATO_RE = re.compile(r"(?<![\w:])[0-9a-fA-F:]{2,}(?:/\d{1,3})?(?![\w:])")
+
+
+def _tiene_ipv6(text: str) -> bool:
+    for m in _V6_CANDIDATO_RE.finditer(text):
+        tok = m.group(0).split("/", 1)[0]
+        if tok.count(":") < 2:
+            continue
+        try:
+            ipaddress.IPv6Address(tok)
+            return True
+        except ValueError:
+            continue
+    return False
+
+
+def sensitive_reason(messages, target: str = "", terms=()) -> str | None:
+    """Qué dato sensible aparece en TODO el historial, o None (Spec 025, Spec 038).
 
     Revisa cada mensaje (usuario, IA, herramientas y llamadas a herramientas), no solo
     el último: un dato que ya salió antes también cuenta. Devuelve solo el tipo de
-    dato, nunca el valor.
+    dato, nunca el valor. `terms` son términos del engagement (nombres de cliente…).
     """
     text = "\n".join(str(m) for m in messages)
     m = _IPV4_RE.search(text)
     if m:
         return "un rango de red" if "/" in m.group(0) else "una dirección IP"
+    if _tiene_ipv6(text):
+        return "una dirección IPv6"
     objetivo = (target or "").strip()
     if objetivo and objetivo.lower() in text.lower():
         return "el objetivo activo"
+    bajo = text.lower()
+    if any(t and t.strip().lower() in bajo for t in terms):
+        return "un término sensible del engagement"
     return None

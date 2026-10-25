@@ -5,7 +5,7 @@ Escucha solo en 127.0.0.1 (nadie externo puede acceder).
 """
 from pathlib import Path
 
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
@@ -13,6 +13,7 @@ from ollama import Client
 
 import config
 import agent
+import scope
 import state
 import terminal
 import db
@@ -35,6 +36,11 @@ class ChatIn(BaseModel):
 class ApproveIn(BaseModel):
     session_id: str = "main"
     approved: bool
+
+
+class ScopeIn(BaseModel):
+    kind: str = "scope"     # 'scope' = objetivo autorizado · 'term' = término sensible
+    entry: str = ""
 
 
 class TargetIn(BaseModel):
@@ -257,6 +263,55 @@ def toolstore_job_password(job_id: str, body: PasswordIn):
 def toolstore_job_cancel(job_id: str):
     import toolstore_jobs
     return toolstore_jobs.cancel_job(job_id)
+
+
+@app.get("/api/chat/status/{sid}")
+def chat_status(sid: str):
+    """Herramienta en curso y contexto estimado para la barra de estado (Spec 037)."""
+    return agent.session_status(sid)
+
+
+def _alcance_json(sid: str) -> dict:
+    return {"scope": db.list_scope(sid, "scope"), "terms": db.list_scope(sid, "term")}
+
+
+@app.get("/api/scope/{sid}")
+def get_scope(sid: str):
+    """Alcance del engagement y términos sensibles de la sesión (Spec 036, 038)."""
+    return _alcance_json(sid)
+
+
+@app.post("/api/scope/{sid}")
+def add_scope(sid: str, body: ScopeIn):
+    """Añade un objetivo al alcance (IP, rango o dominio) o un término sensible.
+    Solo lo edita el usuario desde la interfaz: la IA no puede ampliar el alcance."""
+    texto = (body.entry or "").strip()
+    if body.kind == "scope":
+        entrada = scope.normalize_entry(texto)
+        if not entrada:
+            raise HTTPException(status_code=400, detail="Escribe una IP, un rango (10.0.0.0/24) o un dominio válido.")
+        db.add_scope(sid, "scope", entrada)
+    elif body.kind == "term":
+        if not texto or len(texto) > 100 or "\n" in texto:
+            raise HTTPException(status_code=400, detail="El término debe tener entre 1 y 100 caracteres, en una línea.")
+        db.add_scope(sid, "term", texto)
+    else:
+        raise HTTPException(status_code=400, detail="Tipo no válido: usa 'scope' o 'term'.")
+    return _alcance_json(sid)
+
+
+@app.post("/api/scope/{sid}/remove")
+def remove_scope(sid: str, body: ScopeIn):
+    if body.kind not in ("scope", "term"):
+        raise HTTPException(status_code=400, detail="Tipo no válido.")
+    db.remove_scope(sid, body.kind, body.entry)
+    return _alcance_json(sid)
+
+
+@app.get("/api/hosts/{sid}")
+def get_hosts(sid: str):
+    """Hosts y puertos abiertos guardados por nmap en la sesión (Spec 036, RF7)."""
+    return {"hosts": db.list_hosts(sid)}
 
 
 @app.get("/api/target")

@@ -25,7 +25,12 @@ import intent
 import router
 import approvals
 import cancel
+import engagement
+import preview
+import progress
+import scope
 import state
+from tools import scan_tool
 from ollama import Client
 from tools import SCHEMAS, NEEDS_APPROVAL, run_tool
 from text_toolcall import parse_text_toolcall
@@ -69,6 +74,7 @@ sessions: dict[str, dict] = {}
 def get_session(sid: str, model: str | None = None) -> dict:
     if sid not in sessions:
         sessions[sid] = {
+            "sid": sid,
             "messages": [{"role": "system", "content": SYSTEM_PROMPT}],
             "queue": [],
             "steps": 0,
@@ -129,9 +135,15 @@ def _context(s: dict) -> list:
     msgs = s["messages"]
     users = [i for i, m in enumerate(msgs) if _role(m) == "user"]
     if len(users) <= config.HISTORY_TURNS or not msgs:
-        return msgs
-    start = users[-config.HISTORY_TURNS]
-    return [msgs[0]] + msgs[start:]
+        base = msgs
+    else:
+        start = users[-config.HISTORY_TURNS]
+        base = [msgs[0]] + msgs[start:]
+    # Memoria del engagement (Spec 036, RF5): objetivo, alcance, hosts y hallazgos desde la base.
+    resumen = engagement.summary(s["sid"]) if s.get("sid") else ""
+    if resumen and base:
+        return [base[0], {"role": "system", "content": resumen}] + list(base[1:])
+    return base
 
 
 def _tools_for(s: dict) -> list | None:
@@ -178,7 +190,9 @@ def _call_model(s: dict, sid: str | None = None):
     mode = router.get_mode(sid) if sid else "local"
 
     if mode == "hybrid" and router.gemini_available():
-        reason = router.sensitive_reason(s["messages"], _current_target())
+        sid_s = sid or s.get("sid") or ""
+        contenido = list(s["messages"]) + [engagement.summary(sid_s)]
+        reason = router.sensitive_reason(contenido, _current_target(), _sensitive_terms(sid_s))
         if reason:
             resp = _call_deephat(s)
             resp._goblin_note = (f"🔒 Hay {reason} en la conversación: esta respuesta la generó "
@@ -275,17 +289,71 @@ def _iter_chunks(open_stream, sid: str | None, halt: threading.Event):
         yield kind, item
 
 
+def _sensitive_terms(sid: str) -> list[str]:
+    """Términos sensibles del engagement (nombres de cliente…). Nunca salen a la nube (Spec 038)."""
+    if not sid:
+        return []
+    try:
+        return db.list_scope(sid, "term")
+    except Exception:
+        return []
+
+
+def _scope_block(sid: str | None, name: str, args: dict) -> str | None:
+    """Motivo por el que la herramienta sale del alcance del engagement, o None (Spec 036, RF2–RF4).
+    Si no se puede leer el alcance, se bloquea: ante la duda, no se ejecuta."""
+    if not sid or name not in ("run_shell", "term_run", "http_get"):
+        return None
+    try:
+        entradas = db.list_scope(sid, "scope")
+    except Exception:
+        return "BLOQUEADO por alcance: no se pudo leer el alcance del engagement."
+    if name == "http_get":
+        return scope.check_url(str(args.get("url", "")), entradas)
+    return scope.check_command(str(args.get("command", "")), entradas)
+
+
+def _log(sid: str | None, name: str, args: dict, result: str, approved: bool) -> None:
+    """Log de auditoría (Fase 8): qué herramienta se intentó, cuándo, resultado."""
+    if not sid:
+        return
+    try:
+        db.log_action(sid, name, json.dumps(args, ensure_ascii=False), result, approved)
+    except Exception:
+        pass
+
+
 def _exec(call, sid: str | None = None, approved: bool = True) -> dict:
     name = call.function.name
     args = dict(call.function.arguments or {})
-    result = run_tool(name, args)
-    # Log de auditoría (Fase 8): qué herramienta se ejecutó, cuándo, resultado.
-    if sid:
+    bloqueo = _scope_block(sid, name, args)
+    if bloqueo:
+        result = bloqueo
+    else:
+        if sid:
+            progress.start(sid, name)
         try:
-            db.log_action(sid, name, json.dumps(args, ensure_ascii=False), result, approved)
-        except Exception:
-            pass
+            result = run_tool(name, args)
+        finally:
+            if sid:
+                progress.finish(sid)
+        # nmap que se ejecuta en la terminal o por shell: sus puertos van a la base (Spec 036, RF7).
+        if sid and name in ("run_shell", "term_run") and \
+                scope.command_name(str(args.get("command", ""))) == "nmap":
+            try:
+                scan_tool.record_nmap(sid, result)
+            except Exception:
+                pass
+    _log(sid, name, args, result, approved)
     return {"name": name, "args": args, "result": result}
+
+
+def session_status(sid: str) -> dict:
+    """Estado para la interfaz: herramienta en curso y contexto estimado (Spec 037, RF3–RF5)."""
+    st = progress.status(sid)
+    s = sessions.get(sid)
+    tokens = sum(len(_content(m)) for m in _context(s)) // 4 if s else 0
+    return {**st, "context_tokens": tokens, "context_limit": config.NUM_CTX}
 
 
 def _stopped(s: dict) -> dict:
@@ -314,14 +382,26 @@ def _step(s: dict, sid: str | None = None) -> dict:
                     f"Herramienta '{name}' no permitida en esta petición. Responde en texto y "
                     "pide al usuario la acción o la ruta explícitas si las necesitas.")})
                 continue
+            args_call = dict(call.function.arguments or {})
+            # Alcance (Spec 036): si sale del engagement, no se pide aprobación; se bloquea.
+            bloqueo = _scope_block(sid, name, args_call)
+            if bloqueo:
+                s["queue"].pop(0)
+                _log(sid, name, args_call, bloqueo, False)
+                s["messages"].append({"role": "tool", "tool_name": name, "content": bloqueo})
+                continue
             base = name in NEEDS_APPROVAL
-            if approvals.needs_approval(sid, name, base, dict(call.function.arguments or {})):
-                return {
+            if approvals.needs_approval(sid, name, base, args_call):
+                pendiente = {
                     "type": "approval",
                     "tool": name,
-                    "args": dict(call.function.arguments or {}),
+                    "args": args_call,
                     "model": s["model"],
                 }
+                diff = preview.diff_for(name, args_call)   # Spec 037, RF1
+                if diff:
+                    pendiente["diff"] = diff
+                return pendiente
             # Herramienta segura: ejecutar sin preguntar
             s["queue"].pop(0)
             done = _exec(call, sid, approved=True)

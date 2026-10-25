@@ -10,6 +10,9 @@ from . import targets as tg
 from . import snippets_tool as sn
 from . import scan_tool as sc
 from . import terminal_tool as tt
+from . import editing as ed
+from . import web as wb
+from . import git_ops as go
 
 TOOLS = {
     "list_dir": fs.list_dir,
@@ -32,6 +35,10 @@ TOOLS = {
     "parse_nikto": sc.parse_nikto,
     "term_run": tt.term_run,
     "term_read": tt.term_read,
+    "edit_lines": ed.edit_lines,
+    "chmod": ed.chmod,
+    "http_get": wb.http_get,
+    "git_ops": go.git_ops,
 }
 
 # Herramientas que modifican/ejecutan: requieren aprobación del usuario.
@@ -40,6 +47,7 @@ TOOLS = {
 NEEDS_APPROVAL = {
     "write_file", "make_dir", "move_path", "copy_path", "delete_path", "run_shell",
     "term_run", "set_target",   # set_target: confirmar autorización por escrito (Spec 025)
+    "edit_lines", "chmod", "http_get", "git_ops",   # Spec 039
 }
 
 
@@ -137,4 +145,29 @@ SCHEMAS = [
        "Lee la salida reciente de la terminal viva, incluido lo que escribió el usuario. "
        "Úsalo para ver el resultado de un comando que corre, o lo que hizo el usuario.",
        {}, []),
+    _t("edit_lines",
+       "Reemplaza un rango de líneas de un archivo (1-based, inclusivas) por un texto nuevo. "
+       "Úsalo para cambiar unas líneas sin reescribir el archivo entero.",
+       {"path": {"type": S, "description": "Ruta del archivo"},
+        "start_line": {"type": "integer", "description": "Primera línea a reemplazar (1-based)"},
+        "end_line": {"type": "integer", "description": "Última línea a reemplazar (inclusive)"},
+        "new_text": {"type": S, "description": "Texto que sustituye a esas líneas (vacío = borrarlas)"}},
+       ["path", "start_line", "end_line", "new_text"]),
+    _t("chmod",
+       "Cambia los permisos de un archivo o carpeta. El modo es octal (755, 644).",
+       {"path": {"type": S, "description": "Ruta"},
+        "mode": {"type": S, "description": "Permisos en octal, por ejemplo 755"}},
+       ["path", "mode"]),
+    _t("http_get",
+       "Hace una petición GET a una URL del alcance del engagement y devuelve el estado y el "
+       "cuerpo (sin seguir redirecciones). Requiere que el host esté en el alcance.",
+       {"url": {"type": S, "description": "URL http:// o https://"}},
+       ["url"]),
+    _t("git_ops",
+       "Operaciones de Git en una carpeta: status, log, init, add (todo), commit (con mensaje), push. "
+       "No hay acciones destructivas.",
+       {"action": {"type": S, "description": "status, log, init, add, commit o push"},
+        "path": {"type": S, "description": "Carpeta del repositorio (por defecto, el área de trabajo)"},
+        "message": {"type": S, "description": "Mensaje del commit (solo para commit)"}},
+       ["action"]),
 ]
