@@ -123,6 +123,17 @@ def _last_user_text(messages) -> str:
     return ""
 
 
+def _context(s: dict) -> list:
+    """Mensajes que recibe el modelo: el system prompt y los últimos HISTORY_TURNS turnos
+    de usuario (Spec 034, RF2). El historial completo sigue guardado en la sesión."""
+    msgs = s["messages"]
+    users = [i for i, m in enumerate(msgs) if _role(m) == "user"]
+    if len(users) <= config.HISTORY_TURNS or not msgs:
+        return msgs
+    start = users[-config.HISTORY_TURNS]
+    return [msgs[0]] + msgs[start:]
+
+
 def _tools_for(s: dict) -> list | None:
     """Esquemas de herramientas permitidos en el turno (Spec 033). None = sin herramientas."""
     allowed = s.get("allowed")
@@ -141,7 +152,7 @@ def _call_deephat(s: dict):
     """Llama al modelo local (DeepHat) vía Ollama."""
     resp = client.chat(
         model=s["model"],
-        messages=s["messages"],
+        messages=_context(s),
         tools=_tools_for(s),
         options=_opts(),
         keep_alive=config.KEEP_ALIVE,
@@ -180,7 +191,7 @@ def _call_model(s: dict, sid: str | None = None):
             return resp
         try:
             import gemini_client
-            resp = gemini_client.chat(s["messages"], _tools_for(s) or [])
+            resp = gemini_client.chat(_context(s), _tools_for(s) or [])
             # ¿Gemini se negó? Caer a DeepHat.
             if not resp.message.tool_calls and router.looks_like_refusal(resp.message.content):
                 resp = _call_deephat(s)
@@ -390,6 +401,13 @@ def user_message(sid: str, text: str, model: str | None = None) -> dict:
             db.set_title(sid, text[:60])
     except Exception:
         pass
+    if intent.is_capability(text):
+        s["messages"].append({"role": "assistant", "content": intent.CAPABILITY_REPLY})
+        try:
+            db.add_message(sid, "assistant", intent.CAPABILITY_REPLY, "GOBLIN")
+        except Exception:
+            pass
+        return {"type": "text", "content": intent.CAPABILITY_REPLY, "model": "GOBLIN"}
     return _step(s, sid)
 
 
@@ -452,6 +470,17 @@ def stream_message(sid: str, text: str, model: str | None = None):
     except Exception:
         pass
 
+    # Pregunta de capacidad: respuesta fija, sin modelo (Spec 034, RF1).
+    if intent.is_capability(text):
+        s["messages"].append({"role": "assistant", "content": intent.CAPABILITY_REPLY})
+        try:
+            db.add_message(sid, "assistant", intent.CAPABILITY_REPLY, "GOBLIN")
+        except Exception:
+            pass
+        yield {"type": "token", "content": intent.CAPABILITY_REPLY}
+        yield {"type": "done", "model": "GOBLIN"}
+        return
+
     # Solo hacemos streaming en modo local (DeepHat/Ollama). En híbrido/manual con otro
     # modelo, delegamos al flujo normal.
     mode = router.get_mode(sid)
@@ -466,7 +495,7 @@ def stream_message(sid: str, text: str, model: str | None = None):
     label = f"DeepHat-rápido ({fast})" if fast else "DeepHat"
 
     def _open_stream():
-        return client.chat(model=use_model, messages=s["messages"], tools=use_tools,
+        return client.chat(model=use_model, messages=_context(s), tools=use_tools,
                            options=_stream_opts(use_tools), keep_alive=config.KEEP_ALIVE,
                            stream=True)
 

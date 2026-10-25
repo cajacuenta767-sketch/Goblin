@@ -38,6 +38,8 @@ SHELL_TIMEOUT = int(os.getenv("GOBLIN_SHELL_TIMEOUT", "180"))  # segundos por co
 TOOL_OUTPUT_CHARS = int(os.getenv("GOBLIN_TOOL_OUTPUT_CHARS", "6000"))
 # Tope de tokens de respuesta cuando el turno no usa herramientas (charla, preguntas).
 CHAT_MAX_TOKENS = int(os.getenv("GOBLIN_CHAT_MAX_TOKENS", "300"))
+# Turnos de usuario que recibe el modelo (el historial completo se guarda igual) (Spec 034).
+HISTORY_TURNS = int(os.getenv("GOBLIN_HISTORY_TURNS", "10"))
 
 # --- Router híbrido / Gemini (Spec 008, opcional) ---
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "").strip()

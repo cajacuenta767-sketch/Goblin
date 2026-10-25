@@ -55,3 +55,29 @@ def allowed_tools(text: str) -> set[str] | None:
     if kind == "analysis" and mentions_path(text):
         return set(READ_ONLY_TOOLS)
     return set()
+
+
+# Preguntas sobre lo que GOBLIN puede hacer (Spec 034, RF1). No piden ninguna acción.
+_CAPABILITY_RE = re.compile(
+    r"^[\s¿?¡!]*(puedes|puede|podrías|podrias|sabes|eres capaz de|qué puedes hacer|que puedes hacer|"
+    r"qué haces|que haces|para qué sirves|para que sirves|quién eres|quien eres|qué eres|que eres)\b",
+    re.IGNORECASE,
+)
+
+CAPABILITY_REPLY = (
+    "Sí. Trabajo con los archivos y carpetas de tu computadora: puedo listarlos, leerlos, buscar "
+    "texto, crear, copiar, mover y borrar, y ejecutar comandos. Lo que cambia algo o ejecuta comandos "
+    "te lo pido aprobar antes. Para analizar algo, dime la ruta (por ejemplo ~/proyecto/app.py) y "
+    "qué quieres saber de ella."
+)
+
+
+def is_capability(text: str) -> bool:
+    """True si el mensaje pregunta por las capacidades de GOBLIN y no pide una acción (Spec 034)."""
+    t = text or ""
+    if not _CAPABILITY_RE.match(t):
+        return False
+    # Solo cuenta lo que viene DESPUÉS de la fórmula: en "¿qué puedes hacer?" el "hacer" es parte
+    # de la pregunta, no una orden.
+    resto = _CAPABILITY_RE.sub("", t, count=1)
+    return not _ACTION_RE.search(resto)
