@@ -81,3 +81,27 @@ def is_capability(text: str) -> bool:
     # de la pregunta, no una orden.
     resto = _CAPABILITY_RE.sub("", t, count=1)
     return not _ACTION_RE.search(resto)
+
+
+# Palabras que marcan una secuencia de pasos (Spec 035, RF1).
+_SEQUENCE_RE = re.compile(r"\b(luego|después|despues|primero|además|ademas)\b", re.IGNORECASE)
+
+_CONFIRM_WORDS = {
+    "si", "sí", "ok", "okay", "dale", "ejecuta", "ejecútalo", "adelante", "hazlo", "confirmo",
+    "listo", "vale", "claro", "de acuerdo", "procede", "sip", "sí, ejecuta", "si, ejecuta",
+}
+
+
+def is_multistep(text: str) -> bool:
+    """True si es una petición de acción de varios pasos (Spec 035, RF1)."""
+    t = text or ""
+    if classify(t) != "action":
+        return False
+    verbos = {m.group(0).lower() for m in _ACTION_RE.finditer(t)}
+    return len(verbos) >= 2 or bool(_SEQUENCE_RE.search(t))
+
+
+def is_confirmation(text: str) -> bool:
+    """True si el mensaje solo confirma un plan ("sí", "dale"…) (Spec 035, RF3)."""
+    limpio = (text or "").strip().lower().strip("¡!¿?.,; ")
+    return limpio in _CONFIRM_WORDS

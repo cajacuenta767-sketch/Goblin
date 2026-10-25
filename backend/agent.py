@@ -378,9 +378,32 @@ def _begin_turn(sid: str) -> None:
     cancel.set_session(sid)
 
 
+# Plan visible (Spec 035): el modelo propone pasos sin herramientas; "sí" los ejecuta.
+PLAN_REQUEST = (
+    "Escribe un plan corto y numerado (máximo 6 pasos) para cumplir la última petición del "
+    "usuario, nombrando la herramienta de cada paso. No ejecutes nada ni llames herramientas. "
+    "Termina con: «¿Lo ejecuto? Responde sí o dime qué cambiar.»"
+)
+EXECUTE_TEXT = "Ejecuta el plan que propusiste, paso a paso."
+
+
+def _plan_messages(s: dict) -> list:
+    """Historial acotado más la petición de plan (no se guarda en la conversación)."""
+    return list(_context(s)) + [{"role": "user", "content": PLAN_REQUEST}]
+
+
+def _plan_nonstream(s: dict) -> str:
+    resp = client.chat(model=s["model"], messages=_plan_messages(s), tools=None,
+                       options=_stream_opts(None), keep_alive=config.KEEP_ALIVE)
+    return resp.message.content or ""
+
+
 def user_message(sid: str, text: str, model: str | None = None) -> dict:
     _begin_turn(sid)
     s = get_session(sid, model)
+    if s.get("pending_plan") and intent.is_confirmation(text):
+        text = EXECUTE_TEXT                     # RF3: confirmación → ejecutar el plan
+    s["pending_plan"] = False                   # RF4: cualquier otro mensaje descarta el plan
     _set_turn_tools(s, text)
     # Las herramientas de pentest y de terminal usan esta sesión.
     try:
@@ -408,6 +431,18 @@ def user_message(sid: str, text: str, model: str | None = None) -> dict:
         except Exception:
             pass
         return {"type": "text", "content": intent.CAPABILITY_REPLY, "model": "GOBLIN"}
+    if intent.is_multistep(text):               # RF1: plan visible, sin ejecutar
+        try:
+            plan = _plan_nonstream(s)
+        except Exception as e:
+            return {"type": "error", "content": f"Error al preparar el plan: {e}"}
+        s["messages"].append({"role": "assistant", "content": plan})
+        s["pending_plan"] = True
+        try:
+            db.add_message(sid, "assistant", plan, "DeepHat")
+        except Exception:
+            pass
+        return {"type": "text", "content": plan, "model": "DeepHat"}
     return _step(s, sid)
 
 
@@ -453,6 +488,10 @@ def stream_message(sid: str, text: str, model: str | None = None):
     """
     _begin_turn(sid)
     s = get_session(sid, model)
+    if s.get("pending_plan") and intent.is_confirmation(text):
+        yield {"type": "fallback"}              # la confirmación la procesa user_message (Spec 035)
+        return
+    s["pending_plan"] = False                   # RF4: cualquier otro mensaje descarta el plan
     _set_turn_tools(s, text)
     try:
         from tools import pentest
@@ -486,6 +525,38 @@ def stream_message(sid: str, text: str, model: str | None = None):
     mode = router.get_mode(sid)
     if mode != "local":
         yield {"type": "fallback"}
+        return
+
+    # Plan visible en streaming (Spec 035, RF1): sin herramientas, queda pendiente de confirmación.
+    if intent.is_multistep(text):
+        full = ""
+        halt = threading.Event()
+
+        def _open_plan():
+            return client.chat(model=s["model"], messages=_plan_messages(s), tools=None,
+                               options=_stream_opts(None), keep_alive=config.KEEP_ALIVE, stream=True)
+        try:
+            for kind, item in _iter_chunks(_open_plan, sid, halt):
+                if kind == "cancelled":
+                    break
+                piece = item.message.content or ""
+                if piece:
+                    full += piece
+                    yield {"type": "token", "content": piece}
+        except Exception as e:
+            halt.set()
+            yield {"type": "error", "content": f"Error al preparar el plan: {e}"}
+            return
+        if cancel.is_cancelled(sid):
+            yield {"type": "stopped", "content": "Detenido por el usuario.", "model": s["model"]}
+            return
+        s["messages"].append({"role": "assistant", "content": full})
+        s["pending_plan"] = True
+        try:
+            db.add_message(sid, "assistant", full, "DeepHat")
+        except Exception:
+            pass
+        yield {"type": "done", "model": "DeepHat"}
         return
 
     # Saludo corto y modelo rápido configurado: no hace falta el modelo grande (RF5).

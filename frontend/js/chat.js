@@ -139,6 +139,12 @@ const Chat = {
     const decoder = new TextDecoder();
     let buffer = "", bubble = null, full = "", fell = false;
 
+    // Muestra el modelo que respondió (DeepHat, GOBLIN…) y no uno fijo.
+    const setTag = (modelo) => {
+      const tag = bubble && bubble.closest(".msg") && bubble.closest(".msg").querySelector(".model-tag");
+      if (tag && modelo) tag.textContent = modelo;
+    };
+
     const ensureBubble = () => {
       if (bubble) return;
       const div = document.createElement("div");
@@ -166,6 +172,7 @@ const Chat = {
         else if (ev.type === "token") { ensureBubble(); full += ev.content; bubble.textContent = full; this.scrollDown(); }
         else if (ev.type === "stopped") {
           if (bubble) bubble.innerHTML = this.renderMarkdown(full);
+          setTag(ev.model);
           this.addMessage("notice", ev.content);
           this.setBusy(false);
           return true;
@@ -173,6 +180,7 @@ const Chat = {
         else if (ev.type === "error") { this.addMessage("error", ev.content); this.setBusy(false); return true; }
         else if (ev.type === "done") {
           if (bubble) bubble.innerHTML = this.renderMarkdown(full);
+          setTag(ev.model);
           bubble && bubble.querySelectorAll("pre code").forEach((b) => { try { hljs.highlightElement(b); } catch {} });
           this.setBusy(false);
           Explorer.refresh();

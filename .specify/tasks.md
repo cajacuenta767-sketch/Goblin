@@ -115,6 +115,21 @@ Cada spec tiene su checklist sin marcar. No se marca hasta validarla en la PC.
 - ✅ Pruebas: 95 pasan (`test_intencion.py`, 8 nuevas).
 - ⬜ PC: probar "analiza mi computadora" con DeepHat real y confirmar que no se ejecuta nada.
 
+## Spec 034 — Respuestas de capacidad y contexto acotado — 🟨
+
+- ✅ "¿puedes analizar algo?" recibe respuesta fija, sin modelo (verificado en navegador).
+- ✅ El modelo recibe el system prompt y los últimos `GOBLIN_HISTORY_TURNS` turnos (10).
+- ✅ Pruebas: `test_contexto.py` (7).
+- ⬜ PC: probar "¿puedes analizar algo?" con DeepHat real.
+
+## Spec 035 — Plan visible antes de ejecutar — 🟨
+
+- ✅ Peticiones de varios pasos muestran un plan sin ejecutar nada (sin herramientas).
+- ✅ "sí" ejecuta el plan; cualquier otro mensaje lo descarta.
+- ✅ La etiqueta de la burbuja muestra el modelo que respondió (`chat.js`).
+- ✅ Pruebas: `test_plan.py` (8); flujo completo verificado en navegador con modelo simulado.
+- ⬜ PC: probar "crea la carpeta pruebas y luego escribe notas.txt" con DeepHat real.
+
 ## Infraestructura (transversal) — ✅
 
 - ✅ `scripts/install.sh`, `run.sh`, `build.sh`, `install-nativo.sh`, `subir-github.sh`.
