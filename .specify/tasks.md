@@ -176,6 +176,13 @@ Cada spec tiene su checklist sin marcar. No se marca hasta validarla en la PC.
 - ⬜ PC: Gemini real con tu clave (la API no se pudo probar desde aquí) y una instalación real con pip.
 - ⬜ Decisión pendiente: apt y npm global (sudo, B-05).
 
+## Spec 046 — Diagnóstico del equipo y velocidad del modelo local — 🟨
+
+- ✅ `scripts/diagnostico-pc.sh`: informe de solo lectura (CPU, memoria, disco, Ollama, google-genai, `.env` sin claves).
+- ✅ Benchmark de tokens/s con 4, 8 y 16 hilos; se omite si Ollama no responde.
+- ✅ Validado sin Ollama y con una API de Ollama simulada.
+- ⬜ PC: `bash scripts/diagnostico-pc.sh` y revisar `workspace/diagnostico-pc.txt` para decidir `num_ctx` e hilos.
+
 ## Infraestructura (transversal) — ✅
 
 - ✅ `scripts/install.sh`, `run.sh`, `build.sh`, `install-nativo.sh`, `subir-github.sh`.
