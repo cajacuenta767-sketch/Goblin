@@ -43,7 +43,7 @@ HISTORY_TURNS = int(os.getenv("GOBLIN_HISTORY_TURNS", "10"))
 
 # --- Router híbrido / Gemini (Spec 008, opcional) ---
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "").strip()
-GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-1.5-flash")
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.8-flash")   # Spec 044: modelo vigente de la guía de Google
 
 # --- Estado hacia la Polybar (Fase 9) ---
 # GOBLIN escribe aquí el target actual; el módulo de Polybar lo lee.

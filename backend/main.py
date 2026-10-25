@@ -98,12 +98,27 @@ class FileContentIn(BaseModel):
 
 @app.get("/api/file")
 def file_read(path: str):
-    """Lee el contenido de un archivo para el editor (Spec 007)."""
-    from tools import read_file
+    """Lee el archivo COMPLETO para el editor (Spec 007; Spec 044 RF2). Sin cortes."""
+    from tools.filesystem import read_file_completo
     try:
-        return {"ok": True, "content": read_file(path)}
+        return {"ok": True, "content": read_file_completo(path)}
     except Exception as e:
         return JSONResponse({"ok": False, "error": str(e)}, status_code=400)
+
+
+class AdjuntoIn(BaseModel):
+    name: str
+    content: str
+
+
+@app.post("/api/adjunto")
+def adjunto(body: AdjuntoIn):
+    """Guarda un adjunto grande en workspace/adjuntos (Spec 044 RF3)."""
+    from tools.filesystem import guardar_adjunto
+    try:
+        return {"ok": True, **guardar_adjunto(body.name, body.content)}
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 @app.post("/api/file")

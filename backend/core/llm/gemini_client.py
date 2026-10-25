@@ -1,12 +1,14 @@
 """
-Cliente de Gemini para el router híbrido (Spec 008).
-Traduce las herramientas de GOBLIN al formato de function-calling de Gemini.
-Si la librería no está instalada o no hay API key, lanza una excepción clara para que
-el router caiga a DeepHat (local).
+Cliente de Gemini para el router híbrido (Specs 008 y 044).
+
+Usa el SDK oficial google-genai (google-generativeai está legado desde nov-2025).
+Traduce las herramientas de GOBLIN a function declarations de Gemini.
+Si la librería no está instalada, no hay API key o Gemini no devuelve texto ni
+herramientas, lanza RuntimeError y el agente cae a DeepHat (local).
 
 Devuelve un objeto con la misma forma mínima que usa el agente:
-  .message.content        -> texto de la respuesta
-  .message.tool_calls     -> lista de llamadas a herramientas (o None)
+  .message.content     -> texto de la respuesta
+  .message.tool_calls  -> lista de llamadas a herramientas (o None)
 """
 import config
 
@@ -38,67 +40,86 @@ def available() -> bool:
     if not config.GEMINI_API_KEY:
         return False
     try:
-        import google.generativeai  # noqa
+        import google.genai  # noqa: F401
         return True
     except ImportError:
         return False
 
 
+def _client():
+    """Cliente de google-genai. Las pruebas lo sustituyen por uno simulado."""
+    from google import genai
+    return genai.Client(api_key=config.GEMINI_API_KEY)
+
+
 def _to_gemini_tools(schemas):
-    """Convierte los schemas (formato Ollama) al formato de Gemini."""
+    """Convierte los schemas (formato Ollama) a Tool de google-genai."""
+    from google.genai import types
     decls = []
-    for s in schemas:
+    for s in schemas or []:
         fn = s["function"]
-        decls.append({
-            "name": fn["name"],
-            "description": fn.get("description", ""),
-            "parameters": fn.get("parameters", {"type": "object", "properties": {}}),
-        })
+        decls.append(types.FunctionDeclaration(
+            name=fn["name"],
+            description=fn.get("description", ""),
+            parameters_json_schema=fn.get("parameters") or {"type": "object", "properties": {}},
+        ))
     # Sin herramientas permitidas en este turno (Spec 033): no se declara ninguna.
-    return [{"function_declarations": decls}] if decls else None
+    return [types.Tool(function_declarations=decls)] if decls else None
+
+
+def _convertir(messages):
+    """Separa el system prompt y traduce el historial al formato de google-genai."""
+    from google.genai import types
+    system = ""
+    contents = []
+    for m in messages:
+        role = m.get("role") if isinstance(m, dict) else getattr(m, "role", "user")
+        content = (m.get("content") if isinstance(m, dict) else getattr(m, "content", "")) or ""
+        if role == "system":
+            system += content + "\n"
+            continue
+        if not content.strip():
+            continue                      # Gemini rechaza partes vacías
+        if role == "user":
+            contents.append(types.Content(role="user", parts=[types.Part(text=content)]))
+        elif role in ("assistant", "tool"):
+            contents.append(types.Content(role="model", parts=[types.Part(text=content)]))
+    return system.strip() or None, contents
 
 
 def chat(messages, schemas):
     """Envía la conversación a Gemini y devuelve una respuesta con la forma del agente."""
     if not available():
-        raise RuntimeError("Gemini no disponible (falta API key o la librería google-generativeai).")
+        raise RuntimeError("Gemini no disponible (falta API key o la librería google-genai).")
 
-    import google.generativeai as genai
-    genai.configure(api_key=config.GEMINI_API_KEY)
-
-    # Separar system prompt y traducir el historial.
-    system = ""
-    history = []
-    for m in messages:
-        role = m.get("role") if isinstance(m, dict) else getattr(m, "role", "user")
-        content = m.get("content") if isinstance(m, dict) else getattr(m, "content", "")
-        if role == "system":
-            system += (content or "") + "\n"
-        elif role == "user":
-            history.append({"role": "user", "parts": [content or ""]})
-        elif role in ("assistant", "tool"):
-            history.append({"role": "model", "parts": [content or ""]})
-
-    model = genai.GenerativeModel(
-        config.GEMINI_MODEL,
-        system_instruction=system or None,
+    from google.genai import types
+    system, contents = _convertir(messages)
+    cfg = types.GenerateContentConfig(
+        system_instruction=system,
         tools=_to_gemini_tools(schemas),
     )
+    resp = _client().models.generate_content(
+        model=config.GEMINI_MODEL, contents=contents, config=cfg,
+    )
 
-    resp = model.generate_content(history)
+    motivo = getattr(getattr(resp, "prompt_feedback", None), "block_reason", None)
+    if motivo:
+        raise RuntimeError(f"Gemini bloqueó la petición: {motivo}")
 
-    # Extraer texto y/o tool calls.
-    text = ""
-    tool_calls = []
-    try:
-        for part in resp.candidates[0].content.parts:
-            if getattr(part, "text", None):
-                text += part.text
-            fc = getattr(part, "function_call", None)
-            if fc and fc.name:
-                args = dict(fc.args) if fc.args else {}
-                tool_calls.append(_ToolCall(fc.name, args))
-    except (IndexError, AttributeError):
-        text = getattr(resp, "text", "") or ""
+    texto, llamadas = "", []
+    candidatos = getattr(resp, "candidates", None) or []
+    partes = []
+    if candidatos and getattr(candidatos[0], "content", None):
+        partes = candidatos[0].content.parts or []
+    for part in partes:
+        if getattr(part, "thought", False):
+            continue                      # razonamiento interno: no se muestra
+        if getattr(part, "text", None):
+            texto += part.text
+        fc = getattr(part, "function_call", None)
+        if fc and fc.name:
+            llamadas.append(_ToolCall(fc.name, dict(fc.args) if fc.args else {}))
 
-    return _Response(_Message(text, tool_calls or None))
+    if not texto and not llamadas:
+        raise RuntimeError("Gemini no devolvió respuesta utilizable.")
+    return _Response(_Message(texto, llamadas or None))

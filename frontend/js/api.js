@@ -19,9 +19,17 @@ const API = {
 
   async _get(path) {
     const r = await fetch(path);
-    if (!r.ok) throw new Error(`HTTP ${r.status} en ${path}`);
+    if (!r.ok) {
+      // Igual que _post: si el backend explica el error, se muestra su mensaje.
+      let detalle = "";
+      try { const j = await r.json(); detalle = j.detail || j.error || ""; } catch { /* sin JSON */ }
+      throw new Error(typeof detalle === "string" && detalle ? detalle : `HTTP ${r.status} en ${path}`);
+    }
     return r.json();
   },
+
+  // Adjunto grande (Spec 044 RF3): se guarda en workspace/adjuntos
+  adjunto(name, content) { return this._post("/api/adjunto", { name, content }); },
 
   // Progreso y contexto de la sesión (Spec 037)
   chatStatus(sid) { return this._get(`/api/chat/status/${encodeURIComponent(sid)}`); },

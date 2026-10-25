@@ -153,6 +153,15 @@ Cada spec tiene su checklist sin marcar. No se marca hasta validarla en la PC.
 - ✅ Micrófono y transcripción en Chromium con micrófono falso (12 comprobaciones).
 - ⬜ PC: transcripción real: `.venv/bin/pip install faster-whisper`, `./scripts/fetch-whisper.sh` y probar 2 segundos de voz.
 
+## Spec 044 — Gemini con google-genai y archivos grandes — 🟨
+
+- ✅ Cliente de Gemini sobre `google-genai` (sustituye al paquete legado); modelo por defecto `gemini-3.8-flash` (`GEMINI_MODEL`).
+- ✅ El editor abre y guarda archivos completos hasta 5 MB. Se corrige un bug: el editor cortaba a 30 000 caracteres y guardar borraba el resto.
+- ✅ Adjuntos de hasta 5 MB: los pequeños se pegan como antes; los grandes se guardan en `workspace/adjuntos` y se abren en el editor.
+- ✅ `read_file` lee por tramos (`desde`, `lineas`) para el modelo.
+- ✅ Pruebas: `test_gemini_cliente.py` (8), `test_archivos_grandes.py` (12) y E2E de adjuntos (9).
+- ⬜ PC: `.venv/bin/pip install -U google-genai`, y revisar que `GEMINI_MODEL` en tu `.env` no sea `gemini-1.5-flash`.
+
 ## Infraestructura (transversal) — ✅
 
 - ✅ `scripts/install.sh`, `run.sh`, `build.sh`, `install-nativo.sh`, `subir-github.sh`.

@@ -187,13 +187,35 @@ const Chrome = {
     file.addEventListener("change", () => {
       const f = file.files && file.files[0];
       if (!f) return;
-      if (f.size > 200 * 1024) { this.notice("El archivo es muy grande (máximo 200 KB)."); file.value = ""; return; }
-      const reader = new FileReader();
-      reader.onload = () => {
-        const header = `Archivo adjunto: ${f.name}\n\`\`\`\n${reader.result}\n\`\`\`\n\n`;
-        input.value = header + input.value;
-        input.focus();
+      // Spec 044 RF3: hasta 16 KB se pegan en el campo; hasta 5 MB se guardan en workspace/adjuntos
+      // y se abren en el editor completos. Así el archivo se puede ver sin llenar el contexto del modelo.
+      const LIMITE_PEGADO = 16 * 1024;
+      const LIMITE_ADJUNTO = 5 * 1024 * 1024;
+      if (f.size > LIMITE_ADJUNTO) {
+        this.notice(`El archivo pesa ${(f.size / (1024 * 1024)).toFixed(1)} MB; el adjunto admite hasta 5 MB.`);
         file.value = "";
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = async () => {
+        const texto = reader.result;
+        file.value = "";
+        if (f.size <= LIMITE_PEGADO) {
+          const header = `Archivo adjunto: ${f.name}\n\`\`\`\n${texto}\n\`\`\`\n\n`;
+          input.value = header + input.value;
+          input.focus();
+          return;
+        }
+        try {
+          const r = await API.adjunto(f.name, texto);
+          if (typeof Editor !== "undefined" && Editor && Editor.open) Editor.open(r.relative);
+          const aviso = `Archivo adjunto guardado en ${r.relative} (${r.lines} líneas). ` +
+            "Está abierto en el editor. Puedo leerlo por partes si lo necesitas.\n\n";
+          input.value = aviso + input.value;
+        } catch (e) {
+          this.notice("No pude guardar el adjunto: " + e.message);
+        }
+        input.focus();
       };
       reader.onerror = () => this.notice("No pude leer el archivo.");
       reader.readAsText(f);

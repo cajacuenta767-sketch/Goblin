@@ -83,8 +83,10 @@ def _t(name, desc, props, required):
 SCHEMAS = [
     _t("list_dir", "Lista el contenido de una carpeta.",
        {"path": {"type": S, "description": "Ruta de la carpeta"}}, ["path"]),
-    _t("read_file", "Lee el contenido de un archivo de texto.",
-       {"path": {"type": S, "description": "Ruta del archivo"}}, ["path"]),
+    _t("read_file", "Lee un archivo de texto. Los archivos grandes se leen por tramos: usa desde y lineas.",
+       {"path": {"type": S, "description": "Ruta del archivo"},
+        "desde": {"type": "integer", "description": "Línea inicial (1 = primera)"},
+        "lineas": {"type": "integer", "description": "Cuántas líneas leer (máximo 400)"}}, ["path"]),
     _t("write_file", "Crea o sobrescribe un archivo de texto con el contenido dado.",
        {"path": {"type": S}, "content": {"type": S}}, ["path", "content"]),
     _t("make_dir", "Crea una carpeta (y las intermedias si faltan).",
