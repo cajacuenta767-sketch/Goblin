@@ -32,3 +32,6 @@ goblin
 .vscode/
 .idea/
 *.swp
+
+# Monaco descargado por scripts/fetch-monaco.sh (no se sube; ~14 MB)
+frontend/vendor/monaco/

@@ -11,9 +11,18 @@ Uso típico:
   - main.py /api/stop llama a request(sid).
 """
 import os
+import re
 import signal
 import subprocess
 import threading
+
+try:
+    import psutil
+except ImportError:  # psutil está en requirements.txt; sin él solo se pierde la limpieza de la terminal
+    psutil = None
+
+# Variable que term_session exporta mientras la IA ejecuta un comando en la terminal viva.
+TERM_TAG_VAR = "GOBLIN_TERM_TAG"
 
 _lock = threading.Lock()
 _cancelled: set[str] = set()                    # sesiones con Detener pedido
@@ -68,11 +77,52 @@ def kill_group(proc: subprocess.Popen) -> None:
             pass
 
 
+def safe_tag(sid: str) -> str:
+    """Etiqueta segura para la variable de entorno de la terminal viva (Spec 043 RF1)."""
+    return re.sub(r"[^A-Za-z0-9_-]", "", sid or "")[:64] or "main"
+
+
+def kill_terminal_tree(sid: str) -> int:
+    """Mata los procesos que la IA lanzó en la terminal viva de la sesión (Spec 043 RF1).
+
+    term_session exporta GOBLIN_TERM_TAG=<sesión> solo mientras ejecuta un comando de la
+    IA, así que cualquier proceso que ese comando deje en marcha lleva la etiqueta en su
+    entorno, aunque se haya desdoblado. Se matan esos procesos y sus descendientes. La
+    shell del usuario y sus procesos no llevan la etiqueta y no se tocan.
+    """
+    if not psutil:
+        return 0
+    tag = safe_tag(sid)
+    marcados = []
+    for p in psutil.process_iter():
+        try:
+            if p.environ().get(TERM_TAG_VAR) == tag:
+                marcados.append(p)
+        except (psutil.Error, OSError):
+            continue
+    pids: set[int] = set()
+    for p in marcados:
+        pids.add(p.pid)
+        try:
+            pids.update(h.pid for h in p.children(recursive=True))
+        except psutil.Error:
+            pass
+    matados = 0
+    for pid in pids:
+        try:
+            psutil.Process(pid).kill()
+            matados += 1
+        except psutil.Error:
+            pass
+    return matados
+
+
 def request(sid: str) -> int:
-    """Marca la sesión como cancelada y mata sus procesos de shell.
+    """Marca la sesión como cancelada y mata sus procesos de shell y de terminal viva.
 
     Devuelve cuántos procesos mató. Como GOBLIN atiende una sesión a la vez en el
-    shell, se matan todos los procesos registrados.
+    shell, se matan todos los procesos registrados de run_shell; los de la terminal
+    viva se localizan por su etiqueta de sesión (no se mata la shell del usuario).
     """
     with _lock:
         _cancelled.add(sid)
@@ -80,4 +130,4 @@ def request(sid: str) -> int:
         _killed.update(procs)
     for p in procs:
         kill_group(p)
-    return len(procs)
+    return len(procs) + kill_terminal_tree(sid)

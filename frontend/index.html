@@ -14,8 +14,7 @@
 <link rel="stylesheet" href="vendor/xterm.css">
 <script src="vendor/xterm.min.js"></script>
 <script src="vendor/xterm-addon-fit.min.js"></script>
-<!-- Editor de código (Monaco), por CDN -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.52.0/min/vs/loader.min.js"></script>
+<!-- Monaco (editor) se carga en editor.js desde vendor/monaco (scripts/fetch-monaco.sh) -->
 </head>
 <body>
 
@@ -151,10 +150,11 @@
       <!-- Editor Monaco -->
       <div id="editorPanel">
         <div class="editor-head">
-          <span class="editor-file" id="editorFile">—</span>
+          <div class="editor-tabs" id="editorTabs" role="tablist"></div>
+          <span class="editor-aviso" id="editorAviso" hidden></span>
           <span class="editor-actions">
-            <span id="editorSave" class="editor-btn" title="Guardar (Ctrl+S)">💾 Guardar</span>
-            <span id="editorClose" class="editor-btn" title="Cerrar">✕</span>
+            <span id="editorSave" class="editor-btn" title="Guardar pestaña activa (Ctrl+S)">💾 Guardar</span>
+            <span id="editorClose" class="editor-btn" title="Cerrar pestaña activa">✕</span>
           </span>
         </div>
         <div id="editorBody"></div>

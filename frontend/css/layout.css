@@ -386,3 +386,15 @@ pre.diff div { white-space: pre; }
 pre.diff .add { color: #7ee2a8; background: rgba(61, 220, 132, 0.10); }
 pre.diff .del { color: #f29a9a; background: rgba(255, 80, 80, 0.10); }
 pre.diff .hunk { color: var(--text-faint); }
+
+/* --- Editor con pestañas (Spec 043 RF3) --- */
+.editor-tabs { display: flex; gap: 2px; flex: 1 1 auto; min-width: 0; height: 100%; align-items: flex-end; overflow-x: auto; scrollbar-width: thin; }
+.editor-tab { display: flex; align-items: center; gap: 6px; padding: 4px 8px 3px; font-size: 12px; color: var(--text-dim); border: 1px solid transparent; border-bottom: none; border-radius: 4px 4px 0 0; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
+.editor-tab:hover { color: var(--text); }
+.editor-tab.active { color: var(--text); background: var(--panel); border-color: var(--line); }
+.editor-tab-dot { color: var(--accent); font-size: 9px; }
+.editor-tab-x { color: var(--text-dim); padding: 0 3px; border-radius: 3px; }
+.editor-tab-x:hover { color: var(--accent); background: var(--panel-2); }
+.editor-aviso { font-size: 11px; color: #e0b050; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex: 0 1 45%; }
+.editor-aviso[hidden] { display: none; }
+.editor-actions { flex-shrink: 0; margin-left: auto; }

@@ -61,6 +61,9 @@ fi
 info "Descargando modelo: $MODEL (~4.5 GB, puede tardar)..."
 ollama pull "$MODEL" || warn "No se pudo descargar el modelo. Hazlo manual: ollama pull $MODEL"
 
+# --- 5b. Monaco (editor) para usarlo sin internet (Spec 043 RF2) ---
+bash scripts/fetch-monaco.sh || warn "No se pudo descargar Monaco. Hazlo luego con: ./scripts/fetch-monaco.sh"
+
 # --- 6. (Opcional) Dependencias para la app nativa (Tauri) ---
 echo ""
 read -r -p "¿Instalar también lo necesario para compilar la APP NATIVA (Tauri)? [s/N] " RESP

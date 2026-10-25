@@ -139,6 +139,13 @@ Cada spec tiene su checklist sin marcar. No se marca hasta validarla en la PC.
 - ✅ 040 Layout con ratón: divisores, acoplar paneles arrastrando la cabecera, colapsar con doble clic, persistencia, "Restablecer disposición". Validado en Chromium con ratón (19 comprobaciones).
 - ✅ 041 Panel de engagement (Alcance, Hosts, Snippets), barra de estado (contexto, objetivo, modo). Validado en Chromium con ratón.
 
+## Spec 043 — Terminal, Monaco y pestañas — ✅ (validado en pruebas y Chromium)
+
+- ✅ Detener termina los procesos que la IA lanzó en la terminal viva; la shell del usuario sigue viva (7 pruebas: `test_terminal_detener.py`).
+- ✅ Monaco se sirve desde `frontend/vendor/monaco` y el editor carga sin red (E2E).
+- ✅ Pestañas del editor: cambios sin guardar conservados, aviso en línea al cerrar, Ctrl+S (E2E, 14 comprobaciones).
+- ⬜ PC: terminal pty real en Parrot y ejecutar `./scripts/fetch-monaco.sh` una vez con internet.
+
 ## Infraestructura (transversal) — ✅
 
 - ✅ `scripts/install.sh`, `run.sh`, `build.sh`, `install-nativo.sh`, `subir-github.sh`.
@@ -155,7 +162,7 @@ Orden según riesgo y valor. Cada ítem se convertirá en spec antes de programa
 
 - ⬜ **B-01 · Comandos rápidos reales** (`/target`, `/recon`, `/scan`, `/report`). Hoy solo aparecen en el prompt del sistema; ningún código los procesa. Plan §10.4 #16. → spec 026.
 - ⬜ **B-02 · Snippets en la UI**: clic en un snippet lo inserta en el chat/terminal. Hoy solo la IA puede leerlos (`get_snippet`). Fase 8. → spec 027.
-- ⬜ **B-03 · Editor IDE**: pestañas de archivos abiertos, paneles redimensionables, tema claro (Fase 2, todo pendiente). → spec 028.
+- 🟨 **B-03 · Editor IDE**: pestañas y paneles redimensionables hechos (specs 043 y 040). Falta el tema claro. → spec 028.
 - ⬜ **B-04 · Informe en PDF** (plan §10.4 #17). Hay que justificar la dependencia (constitución IV.4). → spec 029.
 
 ### Prioridad 2 — Decisiones que son del usuario
@@ -166,14 +173,14 @@ Orden según riesgo y valor. Cada ítem se convertirá en spec antes de programa
 ### Prioridad 3 — Calidad y documentación
 
 - ⬜ **B-07 · Spec 007 (Monaco)**: falta el archivo; crearlo como documentación de lo construido. Además, el número 020 no existe: confirmar si se omitió a propósito.
-- ⬜ **B-08 · Monaco sin internet**: vendorizar el loader, igual que se hizo con marked/xterm.
+- ✅ **B-08 · Monaco sin internet**: `scripts/fetch-monaco.sh` lo deja en `frontend/vendor/monaco/`. Hecho en spec 043.
 - ⬜ **B-09 · Pruebas de interfaz en el repo**: el E2E de navegador (Playwright) vive fuera del repo. Decidir si entra al CI.
 - 🟨 **B-10 · Ampliar la guarda de privacidad (025)**: IPv6 y términos del engagement, hecho en spec 038.
 - ⬜ **B-11 · Marcar checklists de 008–019** cuando se validen en la PC.
 
 ### Prioridad 4 — Fase 8 y 5 (más adelante)
 
-- ⬜ **B-12 · Gestión de procesos de la terminal pty** en Detener (extiende spec 024 → spec 031).
+- ✅ **B-12 · Gestión de procesos de la terminal pty** en Detener. Hecho en spec 043 (RF1).
 - ⬜ **B-13 · Fase 5 multimedia**: imágenes, video (fotogramas con ffmpeg), audio. Baja prioridad frente a pentest.
 - ✅ **B-14 · Visor estructurado de resultados** (tabla de hosts y puertos). Hecho en spec 041.
 
