@@ -21,6 +21,7 @@ import threading
 
 import config
 import db
+import intent
 import router
 import approvals
 import cancel
@@ -113,12 +114,26 @@ def _last_user_text(messages) -> str:
     return ""
 
 
+def _tools_for(s: dict) -> list | None:
+    """Esquemas de herramientas permitidos en el turno (Spec 033). None = sin herramientas."""
+    allowed = s.get("allowed")
+    if allowed is None:          # turno de acción: todas
+        return SCHEMAS
+    schemas = [sc for sc in SCHEMAS if sc["function"]["name"] in allowed]
+    return schemas or None
+
+
+def _set_turn_tools(s: dict, text: str) -> None:
+    """Fija qué herramientas puede usar este turno, según la intención (Spec 033)."""
+    s["allowed"] = intent.allowed_tools(text)
+
+
 def _call_deephat(s: dict):
     """Llama al modelo local (DeepHat) vía Ollama."""
     resp = client.chat(
         model=s["model"],
         messages=s["messages"],
-        tools=SCHEMAS,
+        tools=_tools_for(s),
         options=_opts(),
         keep_alive=config.KEEP_ALIVE,
     )
@@ -156,7 +171,7 @@ def _call_model(s: dict, sid: str | None = None):
             return resp
         try:
             import gemini_client
-            resp = gemini_client.chat(s["messages"], SCHEMAS)
+            resp = gemini_client.chat(s["messages"], _tools_for(s) or [])
             # ¿Gemini se negó? Caer a DeepHat.
             if not resp.message.tool_calls and router.looks_like_refusal(resp.message.content):
                 resp = _call_deephat(s)
@@ -272,6 +287,13 @@ def _step(s: dict, sid: str | None = None) -> dict:
         if s["queue"]:
             call = s["queue"][0]
             name = call.function.name
+            # Spec 033: una herramienta fuera de la intención del turno no se ejecuta.
+            if s.get("allowed") is not None and name not in s["allowed"]:
+                s["queue"].pop(0)
+                s["messages"].append({"role": "tool", "tool_name": name, "content": (
+                    f"Herramienta '{name}' no permitida en esta petición. Responde en texto y "
+                    "pide al usuario la acción o la ruta explícitas si las necesitas.")})
+                continue
             base = name in NEEDS_APPROVAL
             if approvals.needs_approval(sid, name, base, dict(call.function.arguments or {})):
                 return {
@@ -339,6 +361,7 @@ def _begin_turn(sid: str) -> None:
 def user_message(sid: str, text: str, model: str | None = None) -> dict:
     _begin_turn(sid)
     s = get_session(sid, model)
+    _set_turn_tools(s, text)
     # Las herramientas de pentest y de terminal usan esta sesión.
     try:
         from tools import pentest
@@ -403,6 +426,7 @@ def stream_message(sid: str, text: str, model: str | None = None):
     """
     _begin_turn(sid)
     s = get_session(sid, model)
+    _set_turn_tools(s, text)
     try:
         from tools import pentest
         pentest.set_session(sid)
@@ -429,7 +453,7 @@ def stream_message(sid: str, text: str, model: str | None = None):
     # Saludo corto y modelo rápido configurado: no hace falta el modelo grande (RF5).
     fast = config.FAST_MODEL if (config.FAST_MODEL and router.is_greeting(text)) else ""
     use_model = fast or s["model"]
-    use_tools = None if fast else SCHEMAS
+    use_tools = None if fast else _tools_for(s)
     label = f"DeepHat-rápido ({fast})" if fast else "DeepHat"
 
     def _open_stream():

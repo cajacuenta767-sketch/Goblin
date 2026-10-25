@@ -54,7 +54,8 @@ def _to_gemini_tools(schemas):
             "description": fn.get("description", ""),
             "parameters": fn.get("parameters", {"type": "object", "properties": {}}),
         })
-    return [{"function_declarations": decls}]
+    # Sin herramientas permitidas en este turno (Spec 033): no se declara ninguna.
+    return [{"function_declarations": decls}] if decls else None
 
 
 def chat(messages, schemas):

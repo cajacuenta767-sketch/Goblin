@@ -115,7 +115,8 @@ def test_pregunta_sigue_con_modelo_principal(monkeypatch):
     monkeypatch.setattr(config, "FAST_MODEL", "qwen-rapido:1.5b")
     _collect(agent.stream_message("sess-pregunta", "explica qué es un SYN scan", None))
     assert fake.calls[0]["model"] == config.DEFAULT_MODEL
-    assert fake.calls[0]["tools"] is not None
+    # Una pregunta no lleva herramientas (Spec 033).
+    assert fake.calls[0]["tools"] is None
 
 
 # --- RF7: hilos de CPU en cada llamada ---

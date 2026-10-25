@@ -107,6 +107,14 @@ Cada spec tiene su checklist sin marcar. No se marca hasta validarla en la PC.
 - ⬜ PC: medir tiempo al primer token y tokens/s antes y después con DeepHat real.
 - ⬜ PC: decidir si se descarga `qwen2.5-coder:1.5b` para `GOBLIN_FAST_MODEL`.
 
+## Spec 033 — Intención y alcance por turno — 🟨
+
+- ✅ `backend/intent.py` clasifica cada petición en acción, análisis o charla (código, sin modelo).
+- ✅ "Analiza X" sin ruta no recibe herramientas; con ruta, solo lectura.
+- ✅ Una herramienta fuera de la intención del turno no se ejecuta.
+- ✅ Pruebas: 95 pasan (`test_intencion.py`, 8 nuevas).
+- ⬜ PC: probar "analiza mi computadora" con DeepHat real y confirmar que no se ejecuta nada.
+
 ## Infraestructura (transversal) — ✅
 
 - ✅ `scripts/install.sh`, `run.sh`, `build.sh`, `install-nativo.sh`, `subir-github.sh`.
