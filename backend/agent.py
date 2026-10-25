@@ -21,6 +21,7 @@ import threading
 
 import config
 import db
+import historial
 import intent
 import router
 import approvals
@@ -30,8 +31,8 @@ import preview
 import progress
 import scope
 import state
-from tools import scan_tool
-from ollama import Client
+from tools import scan_tool, packages
+from ollama import Client, Message
 from tools import SCHEMAS, NEEDS_APPROVAL, run_tool
 from text_toolcall import parse_text_toolcall
 
@@ -122,13 +123,6 @@ def _content(m) -> str:
     return (m.get("content") if isinstance(m, dict) else getattr(m, "content", "")) or ""
 
 
-def _last_user_text(messages) -> str:
-    for m in reversed(messages):
-        if _role(m) == "user":
-            return _content(m)
-    return ""
-
-
 def _context(s: dict) -> list:
     """Mensajes que recibe el modelo: el system prompt y los últimos HISTORY_TURNS turnos
     de usuario (Spec 034, RF2). El historial completo sigue guardado en la sesión."""
@@ -160,13 +154,31 @@ def _set_turn_tools(s: dict, text: str) -> None:
     s["allowed"] = intent.allowed_tools(text)
 
 
-def _call_deephat(s: dict):
-    """Llama al modelo local (DeepHat) vía Ollama."""
+def _para_ollama(mensajes) -> list:
+    """Mensajes en el formato que acepta Ollama (Spec 045, RF3).
+
+    Los mensajes de Gemini son objetos propios que Ollama no acepta; se pasan a dict.
+    """
+    salida = []
+    for m in mensajes:
+        if isinstance(m, (dict, Message)):
+            salida.append(m)
+            continue
+        d = {"role": historial.rol(m) or "assistant", "content": historial.contenido(m)}
+        llam = historial.llamadas(m)
+        if llam:
+            d["tool_calls"] = [{"function": {"name": n, "arguments": a}} for n, a, _ in llam]
+        salida.append(d)
+    return salida
+
+
+def _call_deephat(s: dict, mensajes: list, herramientas, opciones: dict):
+    """Llama al modelo local (DeepHat) vía Ollama con los mensajes y herramientas dados."""
     resp = client.chat(
         model=s["model"],
-        messages=_context(s),
-        tools=_tools_for(s),
-        options=_opts(),
+        messages=_para_ollama(mensajes),
+        tools=herramientas,
+        options=opciones,
         keep_alive=config.KEEP_ALIVE,
     )
     resp._goblin_model = "DeepHat"
@@ -180,44 +192,57 @@ def _current_target() -> str:
         return ""
 
 
-def _call_model(s: dict, sid: str | None = None):
-    """Aplica el router híbrido: elige modelo según el modo de la sesión.
-    - local  -> DeepHat
-    - hybrid -> Gemini primero; si se niega o falla, DeepHat.
-                Si hay datos sensibles en la conversación, DeepHat siempre (Spec 025).
-    - manual -> el modelo que el frontend ya fijó en s["model"] (DeepHat por defecto)
+def _relevo_local(s: dict, mensajes, herramientas, opciones, motivo: str):
+    """Gemini no respondió este paso: DeepHat repite la misma petición (Spec 045, RF2)."""
+    resp = _call_deephat(s, mensajes, herramientas, opciones)
+    resp._goblin_note = f"↪️ {motivo}: respondió DeepHat en local, con la misma petición."
+    return resp
+
+
+def _corto(e: Exception, limite: int = 120) -> str:
+    texto = " ".join(str(e).split())
+    return texto if len(texto) <= limite else texto[:limite] + "…"
+
+
+def _call_model(s: dict, sid: str | None = None, plan: bool = False):
+    """Aplica el router: elige el modelo que responde este paso (Spec 045).
+
+    - local   -> DeepHat.
+    - hybrid  -> Gemini primero (orquestador), también en temas de pentest.
+                 Si la conversación tiene datos sensibles, DeepHat siempre (Spec 025, constitución II).
+                 Si Gemini falla, bloquea, vacía o se niega, DeepHat repite el mismo paso.
+    - manual  -> el modelo que el frontend fijó en s["model"] (DeepHat por defecto).
+    plan=True pide el plan visible (Spec 035): sin herramientas.
     """
     mode = router.get_mode(sid) if sid else "local"
+    if plan:
+        mensajes, herramientas, opciones = _plan_messages(s), None, _stream_opts(None)
+    else:
+        mensajes, herramientas, opciones = _context(s), _tools_for(s), _opts()
 
     if mode == "hybrid" and router.gemini_available():
         sid_s = sid or s.get("sid") or ""
+        # La guarda mira todo el historial real (Spec 025, RF4 de 045), no solo el último mensaje.
         contenido = list(s["messages"]) + [engagement.summary(sid_s)]
         reason = router.sensitive_reason(contenido, _current_target(), _sensitive_terms(sid_s))
         if reason:
-            resp = _call_deephat(s)
+            resp = _call_deephat(s, mensajes, herramientas, opciones)
             resp._goblin_note = (f"🔒 Hay {reason} en la conversación: esta respuesta la generó "
                                  "DeepHat en local. Gemini no recibió nada.")
             return resp
-        # Tema de pentest: DeepHat directo, sin esperar a un rechazo de Gemini (Spec 032, RF6).
-        if router.needs_local_intent(_last_user_text(s["messages"])):
-            resp = _call_deephat(s)
-            resp._goblin_note = "🛠️ Tema de pentest: respondió DeepHat en local directamente."
-            return resp
         try:
             import gemini_client
-            resp = gemini_client.chat(_context(s), _tools_for(s) or [])
-            # ¿Gemini se negó? Caer a DeepHat.
-            if not resp.message.tool_calls and router.looks_like_refusal(resp.message.content):
-                resp = _call_deephat(s)
-            else:
-                resp._goblin_model = "Gemini"
-            return resp
-        except Exception:
-            # Cualquier fallo de Gemini → respaldo local, sin romper.
-            return _call_deephat(s)
+            resp = gemini_client.chat(mensajes, herramientas or [])
+        except Exception as e:  # noqa: BLE001 - cualquier fallo de Gemini pasa a DeepHat
+            return _relevo_local(s, mensajes, herramientas, opciones,
+                                 f"Gemini no respondió ({_corto(e)})")
+        if not resp.message.tool_calls and router.looks_like_refusal(resp.message.content):
+            return _relevo_local(s, mensajes, herramientas, opciones, "Gemini se negó a responder")
+        resp._goblin_model = "Gemini"
+        return resp
 
     # local, manual, o híbrido sin API key → DeepHat
-    return _call_deephat(s)
+    return _call_deephat(s, mensajes, herramientas, opciones)
 
 
 def _call_interruptible(fn, sid: str | None):
@@ -344,6 +369,9 @@ def _exec(call, sid: str | None = None, approved: bool = True) -> dict:
                 scan_tool.record_nmap(sid, result)
             except Exception:
                 pass
+        # Spec 045 RF6: si falta un módulo o comando, el modelo recibe la pista para instalar.
+        if name in ("run_shell", "term_run"):
+            result = result + packages.sugerencia(result)
     _log(sid, name, args, result, approved)
     return {"name": name, "args": args, "result": result}
 
@@ -472,10 +500,10 @@ def _plan_messages(s: dict) -> list:
     return list(_context(s)) + [{"role": "user", "content": PLAN_REQUEST}]
 
 
-def _plan_nonstream(s: dict) -> str:
-    resp = client.chat(model=s["model"], messages=_plan_messages(s), tools=None,
-                       options=_stream_opts(None), keep_alive=config.KEEP_ALIVE)
-    return resp.message.content or ""
+def _plan_nonstream(s: dict) -> tuple[str, str]:
+    """Plan sin herramientas por el router (Spec 045, RF7). Devuelve (texto, modelo que lo generó)."""
+    resp = _call_model(s, s.get("sid"), plan=True)
+    return resp.message.content or "", getattr(resp, "_goblin_model", "DeepHat")
 
 
 def user_message(sid: str, text: str, model: str | None = None) -> dict:
@@ -513,16 +541,16 @@ def user_message(sid: str, text: str, model: str | None = None) -> dict:
         return {"type": "text", "content": intent.CAPABILITY_REPLY, "model": "GOBLIN"}
     if intent.is_multistep(text):               # RF1: plan visible, sin ejecutar
         try:
-            plan = _plan_nonstream(s)
+            plan, modelo = _plan_nonstream(s)
         except Exception as e:
             return {"type": "error", "content": f"Error al preparar el plan: {e}"}
         s["messages"].append({"role": "assistant", "content": plan})
         s["pending_plan"] = True
         try:
-            db.add_message(sid, "assistant", plan, "DeepHat")
+            db.add_message(sid, "assistant", plan, modelo)
         except Exception:
             pass
-        return {"type": "text", "content": plan, "model": "DeepHat"}
+        return {"type": "text", "content": plan, "model": modelo}
     return _step(s, sid)
 
 
@@ -613,7 +641,7 @@ def stream_message(sid: str, text: str, model: str | None = None):
         halt = threading.Event()
 
         def _open_plan():
-            return client.chat(model=s["model"], messages=_plan_messages(s), tools=None,
+            return client.chat(model=s["model"], messages=_para_ollama(_plan_messages(s)), tools=None,
                                options=_stream_opts(None), keep_alive=config.KEEP_ALIVE, stream=True)
         try:
             for kind, item in _iter_chunks(_open_plan, sid, halt):
@@ -646,7 +674,7 @@ def stream_message(sid: str, text: str, model: str | None = None):
     label = f"DeepHat-rápido ({fast})" if fast else "DeepHat"
 
     def _open_stream():
-        return client.chat(model=use_model, messages=_context(s), tools=use_tools,
+        return client.chat(model=use_model, messages=_para_ollama(_context(s)), tools=use_tools,
                            options=_stream_opts(use_tools), keep_alive=config.KEEP_ALIVE,
                            stream=True)
 

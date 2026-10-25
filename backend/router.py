@@ -12,6 +12,7 @@ import ipaddress
 import re
 
 import config
+import historial
 
 # Datos sensibles: IPv4 y rangos CIDR (Spec 025). No cubre IPv6 ni nombres de cliente.
 _IPV4_RE = re.compile(
@@ -28,6 +29,8 @@ _REFUSAL_HINTS = [
     "i can't help with that", "i cannot help with that", "i can't assist",
     "i'm not able to help", "no puedo ayudar con eso", "no puedo asistir",
     "i won't", "against my guidelines", "i'm unable to provide",
+    "i can't provide", "i cannot provide", "i'm sorry, but i can't", "i'm sorry, but i cannot",
+    "lo siento, pero no puedo", "no puedo ayudarte", "no puedo proporcionar", "no puedo cumplir",
 ]
 
 
@@ -59,25 +62,10 @@ _GREETING_RE = re.compile(
     r"gracias|muchas gracias|ok|vale|qu[ée] tal|que tal)[\s!.,¡]*$"
 )
 
-# Temas de pentest: van directo a DeepHat (Spec 032, RF6). Sin "\b" al final para
-# que cubra variantes como "escaneo", "escanea" o "exploits".
-_PENTEST_RE = re.compile(
-    r"\b(nmap|sqlmap|metasploit|msfconsole|exploit|payload|reverse shell|shell inversa|"
-    r"escane|pentest|vulnerab|hashcat|gobuster|ffuf|feroxbuster|burp|privesc|"
-    r"escalada de privilegios|enumera|fuzz|cve-\d|hallazgo|post-explot|pivot)",
-    re.IGNORECASE,
-)
-
-
 def is_greeting(text: str) -> bool:
     """Saludo o agradecimiento corto, sin pregunta (Spec 032, RF5)."""
     t = (text or "").strip().lower().lstrip("¡¿ ")
     return len(t) <= 40 and "?" not in t and bool(_GREETING_RE.match(t))
-
-
-def needs_local_intent(text: str) -> bool:
-    """Tema de pentest: conviene DeepHat local directo, sin pasar por Gemini (Spec 032, RF6)."""
-    return bool(_PENTEST_RE.search(text or ""))
 
 
 # Candidatos a IPv6: se validan con ipaddress para no marcar horas como "12:30:45".
@@ -104,7 +92,8 @@ def sensitive_reason(messages, target: str = "", terms=()) -> str | None:
     el último: un dato que ya salió antes también cuenta. Devuelve solo el tipo de
     dato, nunca el valor. `terms` son términos del engagement (nombres de cliente…).
     """
-    text = "\n".join(str(m) for m in messages)
+    # Spec 045 RF4: se lee el texto real de cada mensaje (también de objetos de Gemini).
+    text = "\n".join(m if isinstance(m, str) else historial.texto(m) for m in messages)
     m = _IPV4_RE.search(text)
     if m:
         return "un rango de red" if "/" in m.group(0) else "una dirección IP"

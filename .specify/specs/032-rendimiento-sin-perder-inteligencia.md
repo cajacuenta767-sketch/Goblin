@@ -39,6 +39,8 @@ se encontraron estas causas, por orden de peso:
   `GOBLIN_FAST_MODEL` si está configurado. Si no lo está, se usa DeepHat como siempre.
 - **RF6.** En modo híbrido, si el mensaje o el historial tratan de pentest (nmap, sqlmap, exploit,
   escaneo, CVE…), la respuesta va directa a DeepHat local, sin intentar Gemini ni reintentar.
+  **Sustituido por Spec 045 (RF1, D2):** Gemini responde primero también en temas de pentest sin datos
+  sensibles; DeepHat solo responde si hay datos sensibles o si Gemini falla o se niega.
 - **RF7.** `options.num_thread` se toma de `GOBLIN_NUM_THREAD` (por defecto 8, los núcleos físicos).
 - **RF8.** `run.sh` activa `OLLAMA_FLASH_ATTENTION=1`. Solo tiene efecto si GOBLIN arranca Ollama.
 

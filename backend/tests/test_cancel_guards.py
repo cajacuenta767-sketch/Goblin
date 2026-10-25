@@ -112,7 +112,7 @@ def test_hibrido_con_ip_responde_deephat_sin_llamar_gemini(monkeypatch):
     s = agent.get_session(sid)
     s["messages"].append({"role": "user", "content": "escanea 10.0.0.7"})
 
-    def fake_deephat(sess):
+    def fake_deephat(sess, *_):   # Spec 045: recibe también mensajes, herramientas y opciones
         return SimpleNamespace(message=SimpleNamespace(content="ok", tool_calls=None))
 
     monkeypatch.setattr(agent, "_call_deephat", fake_deephat)

@@ -162,6 +162,20 @@ Cada spec tiene su checklist sin marcar. No se marca hasta validarla en la PC.
 - ✅ Pruebas: `test_gemini_cliente.py` (8), `test_archivos_grandes.py` (12) y E2E de adjuntos (9).
 - ⬜ PC: `.venv/bin/pip install -U google-genai`, y revisar que `GEMINI_MODEL` en tu `.env` no sea `gemini-1.5-flash`.
 
+## Spec 045 — Gemini como orquestador, relevo local e instalación de paquetes — 🟨
+
+- ✅ Causa de la captura: el plan visible (Spec 035) pidió plan sin herramientas para "instala… y luego lee…"; no existía herramienta de instalación.
+- ✅ Gemini responde primero en modo híbrido, también en pentest sin datos sensibles (sustituye Spec 032 RF6). Datos sensibles: DeepHat siempre (constitución II).
+- ✅ Relevo sin bloqueo: error, bloqueo (SAFETY), respuesta vacía o negativa repiten el mismo paso con DeepHat, también a mitad de bucle.
+- ✅ Corrección: los mensajes de Gemini se convierten a formato Ollama antes de pasar a DeepHat (antes el relevo habría fallado).
+- ✅ Corrección: la guarda de privacidad lee el texto y los argumentos de los objetos de Gemini (antes no los veía).
+- ✅ Historial de Gemini con `function_call` / `function_response` y firma de pensamiento conservada.
+- ✅ Plan visible (Spec 035) también pasa por el router.
+- ✅ `install_package` (solo pip, sin shell, nombres validados, siempre con aprobación) y pista cuando falta un módulo o comando.
+- ✅ Pruebas: `test_orquestador.py` (16) y `test_paquetes.py` (20) con clientes simulados. Suite: 248 pasan.
+- ⬜ PC: Gemini real con tu clave (la API no se pudo probar desde aquí) y una instalación real con pip.
+- ⬜ Decisión pendiente: apt y npm global (sudo, B-05).
+
 ## Infraestructura (transversal) — ✅
 
 - ✅ `scripts/install.sh`, `run.sh`, `build.sh`, `install-nativo.sh`, `subir-github.sh`.

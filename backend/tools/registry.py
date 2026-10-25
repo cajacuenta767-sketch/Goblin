@@ -13,6 +13,7 @@ from . import terminal_tool as tt
 from . import editing as ed
 from . import web as wb
 from . import git_ops as go
+from . import packages as pk
 
 TOOLS = {
     "list_dir": fs.list_dir,
@@ -39,6 +40,7 @@ TOOLS = {
     "chmod": ed.chmod,
     "http_get": wb.http_get,
     "git_ops": go.git_ops,
+    "install_package": pk.install_package,
 }
 
 # Herramientas que modifican/ejecutan: requieren aprobación del usuario.
@@ -48,6 +50,7 @@ NEEDS_APPROVAL = {
     "write_file", "make_dir", "move_path", "copy_path", "delete_path", "run_shell",
     "term_run", "set_target",   # set_target: confirmar autorización por escrito (Spec 025)
     "edit_lines", "chmod", "http_get", "git_ops",   # Spec 039
+    "install_package",                              # Spec 045: siempre pide aprobación
 }
 
 
@@ -172,4 +175,10 @@ SCHEMAS = [
         "path": {"type": S, "description": "Carpeta del repositorio (por defecto, el área de trabajo)"},
         "message": {"type": S, "description": "Mensaje del commit (solo para commit)"}},
        ["action"]),
+    _t("install_package",
+       "Instala un paquete de Python con pip. Úsalo cuando un script o comando falle porque falta "
+       "un módulo (No module named). Requiere aprobación del usuario. No instala programas del sistema.",
+       {"manager": {"type": S, "description": "Gestor de paquetes: pip"},
+        "name": {"type": S, "description": "Nombre del paquete, por ejemplo requests o PyYAML"}},
+       ["manager", "name"]),
 ]

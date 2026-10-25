@@ -22,7 +22,7 @@ _AUTO = {
 
 # Siempre requieren aprobación, pase lo que pase.
 # set_target: fijar un objetivo exige confirmar la autorización por escrito (Spec 025).
-_ALWAYS_ASK = {"delete_path", "set_target", "chmod", "http_get", "git_ops"}
+_ALWAYS_ASK = {"delete_path", "set_target", "chmod", "http_get", "git_ops", "install_package"}
 # git status y log solo leen: no piden aprobación (Spec 039, RF4).
 _GIT_LECTURA = {"status", "log"}
 

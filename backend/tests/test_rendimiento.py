@@ -48,7 +48,7 @@ def test_system_prompt_sin_comandos_inexistentes():
         assert cmd not in agent.SYSTEM_PROMPT
 
 
-# --- RF5 y RF6: saludos y temas de pentest ---
+# --- RF5: saludos (la ruta de pentest de RF6 la sustituye Spec 045) ---
 
 def test_saludo_corto_es_saludo():
     assert router.is_greeting("hola")
@@ -59,16 +59,6 @@ def test_saludo_corto_es_saludo():
 def test_pregunta_no_es_saludo():
     assert not router.is_greeting("hola, ¿qué puedes hacer?")
     assert not router.is_greeting("crea una carpeta llamada pruebas")
-
-
-def test_detecta_tema_pentest():
-    assert router.needs_local_intent("escanea 10.0.0.5 con nmap")
-    assert router.needs_local_intent("hay un exploit para este servicio")
-    assert router.needs_local_intent("busca el CVE-2021-44228")
-
-
-def test_charla_normal_no_es_pentest():
-    assert not router.needs_local_intent("cómo hago una tortilla de patatas")
 
 
 # --- RF1: una sola generación por respuesta de texto ---
