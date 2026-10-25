@@ -1,6 +1,6 @@
 # Spec 036 — Memoria del engagement, alcance aplicado y nmap estructurado
 
-**Estado:** ⬜ Pendiente · **Tipo:** funcionalidad + seguridad · **Depende de:** 012, 025, 033, 034
+**Estado:** 🟨 Implementado · pruebas unitarias ✅ · ⬜ PC: DeepHat real · **Tipo:** funcionalidad + seguridad · **Depende de:** 012, 025, 033, 034
 **Motivo:** GOBLIN olvidaba el objetivo y los hallazgos después de unos mensajes (solo veía los últimos
 10 turnos), no comprobaba que los escaneos apuntaran dentro del alcance autorizado y parseaba nmap solo
 como texto suelto.

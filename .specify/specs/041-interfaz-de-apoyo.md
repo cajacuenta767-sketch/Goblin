@@ -1,6 +1,6 @@
 # Spec 041 — Interfaz de apoyo: barra de estado, snippets, hosts, alcance y privacidad
 
-**Estado:** ⬜ Pendiente · **Tipo:** interfaz · **Depende de:** 023, 036, 037, 038
+**Estado:** ✅ Hecho y validado en Chromium con ratón · ⬜ PC: ventana Tauri · **Tipo:** interfaz · **Depende de:** 023, 036, 037, 038
 **Motivo:** piezas del plan (§9.7 y B-02/B-14) que faltan y que el backend ya soporta o soportará.
 
 ## Requisitos funcionales

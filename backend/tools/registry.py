@@ -124,8 +124,8 @@ SCHEMAS = [
     _t("clear_target", "Limpia el objetivo actual del pentest.", {}, []),
     _t("get_target", "Muestra el objetivo actual del pentest.", {}, []),
     _t("get_snippet",
-       "Devuelve snippets/one-liners de pentest de una categoría (reverse_shell, listener, "
-       "transfer, tty_upgrade, recon, privesc). Sin categoría, lista las disponibles.",
+       "Devuelve snippets/one-liners de pentest de una categoría (hoy: reverse_shell). "
+       "Sin categoría, lista las disponibles.",
        {"category": {"type": S, "description": "Categoría de snippet"}}, []),
     _t("parse_nmap",
        "Parsea la salida de un escaneo nmap (texto o ruta a archivo -oN) y extrae los "

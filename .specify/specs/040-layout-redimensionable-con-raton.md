@@ -1,6 +1,6 @@
 # Spec 040 — Layout redimensionable y paneles acoplables (solo ratón)
 
-**Estado:** ⬜ Pendiente · **Tipo:** interfaz · **Depende de:** 002, 023
+**Estado:** ✅ Hecho y validado en Chromium con ratón · ⬜ PC: ventana Tauri · **Tipo:** interfaz · **Depende de:** 002, 023
 **Motivo:** el usuario quiere que la ventana se comporte como Word o un IDE: cambiar el tamaño de cada zona
 arrastrando, mover paneles (sobre todo la terminal) dentro de la ventana y recuperar el diseño guardado.
 Todo con ratón.

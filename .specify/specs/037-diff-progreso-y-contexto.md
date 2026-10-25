@@ -1,6 +1,6 @@
 # Spec 037 — Diff en la aprobación, progreso en vivo y contador de contexto
 
-**Estado:** ⬜ Pendiente · **Tipo:** interfaz + API · **Depende de:** 002, 018, 034
+**Estado:** 🟨 Implementado · pruebas unitarias ✅ · ⬜ PC: DeepHat real · **Tipo:** interfaz + API · **Depende de:** 002, 018, 034
 **Motivo:** la caja de aprobación no mostraba qué iba a cambiar, y "GOBLIN está trabajando…" no decía qué
 herramienta corría ni cuánto llevaba.
 

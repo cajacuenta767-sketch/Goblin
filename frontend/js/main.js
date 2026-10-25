@@ -11,6 +11,8 @@ const App = {
     const safe = (name, fn) => {
       try { return fn(); } catch (e) { console.error("[GOBLIN] falló " + name + ":", e); }
     };
+    // Primero el layout: mueve los paneles a sus zonas antes de cablear los botones.
+    safe("disposición", () => Layout.init());
     await safe("logos", () => this.inlineLogos());
     safe("chat", () => Chat.init());
     safe("aprobaciones", () => Approvals.init());
@@ -20,6 +22,8 @@ const App = {
     safe("voz", () => Voice.init());
     safe("sesiones", () => Sessions.init());
     safe("hallazgos", () => Findings.init());
+    safe("engagement", () => Engagement.init());
+    safe("barra de estado", () => Status.init());
     safe("marketplace", () => ToolStore.init());
     safe("botones de la ventana", () => Chrome.init());
     safe("botones principales", () => this.wireUI());

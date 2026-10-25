@@ -308,6 +308,16 @@ def remove_scope(sid: str, body: ScopeIn):
     return _alcance_json(sid)
 
 
+@app.get("/api/snippets")
+def get_snippets():
+    """Snippets de pentest por categoría, para el panel de engagement (Spec 041, RF4)."""
+    import snippets
+    return {"categories": {
+        cat: [{"name": nombre, "code": codigo} for nombre, codigo in items]
+        for cat, items in snippets.SNIPPETS.items()
+    }}
+
+
 @app.get("/api/hosts/{sid}")
 def get_hosts(sid: str):
     """Hosts y puertos abiertos guardados por nmap en la sesión (Spec 036, RF7)."""

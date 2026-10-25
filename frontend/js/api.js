@@ -8,7 +8,12 @@ const API = {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
     });
-    if (!r.ok) throw new Error(`HTTP ${r.status} en ${path}`);
+    if (!r.ok) {
+      // Si el backend explica el error (p. ej. alcance inválido), se muestra su mensaje.
+      let detalle = "";
+      try { detalle = (await r.json()).detail || ""; } catch { /* sin cuerpo JSON */ }
+      throw new Error(typeof detalle === "string" && detalle ? detalle : `HTTP ${r.status} en ${path}`);
+    }
     return r.json();
   },
 
@@ -17,6 +22,20 @@ const API = {
     if (!r.ok) throw new Error(`HTTP ${r.status} en ${path}`);
     return r.json();
   },
+
+  // Progreso y contexto de la sesión (Spec 037)
+  chatStatus(sid) { return this._get(`/api/chat/status/${encodeURIComponent(sid)}`); },
+
+  // Alcance del engagement y términos sensibles (Spec 036, 038)
+  scope(sid) { return this._get(`/api/scope/${encodeURIComponent(sid)}`); },
+  scopeAdd(sid, kind, entry) { return this._post(`/api/scope/${encodeURIComponent(sid)}`, { kind, entry }); },
+  scopeRemove(sid, kind, entry) { return this._post(`/api/scope/${encodeURIComponent(sid)}/remove`, { kind, entry }); },
+
+  // Hosts y puertos de nmap de la sesión (Spec 036, RF7)
+  hosts(sid) { return this._get(`/api/hosts/${encodeURIComponent(sid)}`); },
+
+  // Snippets de pentest (Spec 041, RF4)
+  snippets() { return this._get("/api/snippets"); },
 
   // Chat: envía un mensaje al agente
   chat(sessionId, message, model) {

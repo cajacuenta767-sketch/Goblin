@@ -66,6 +66,7 @@ const Chrome = {
       view: [
         { label: "Mostrar/ocultar barra lateral", run: () => this.toggleSidebar() },
         { label: "Mostrar/ocultar terminal", run: () => document.getElementById("termChip").click() },
+        { label: "Restablecer disposición de la ventana", run: () => { if (typeof Layout !== "undefined") Layout.reset(); } },
         { label: "Herramientas (marketplace)", run: () => document.getElementById("toolstoreBtn").click() },
         { label: "Ajustes", run: () => this.openSettings() },
       ],
@@ -114,6 +115,7 @@ const Chrome = {
   // ---------- Barra lateral: ☰ ← → ⌕ ----------
   toggleSidebar() {
     this.el.sidebar.classList.toggle("collapsed");
+    if (typeof Layout !== "undefined" && Layout.state) Layout.apply();
   },
 
   wireSidebarIcons() {

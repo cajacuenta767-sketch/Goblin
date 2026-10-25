@@ -1,6 +1,6 @@
 # Spec 039 — Herramientas de control: editar líneas, permisos, HTTP y Git
 
-**Estado:** ⬜ Pendiente · **Tipo:** herramientas del agente · **Depende de:** 001, 009, 036, 037
+**Estado:** 🟨 Implementado · pruebas unitarias ✅ · ⬜ PC: DeepHat real · **Tipo:** herramientas del agente · **Depende de:** 001, 009, 036, 037
 **Motivo:** el plan pedía `edit_lines`, `chmod`, `http_get` y `git_ops`. Sin ellas, la IA reescribe archivos
 enteros para cambiar una línea y no puede publicar cambios.
 

@@ -1,6 +1,6 @@
 # Spec 038 — Privacidad ampliada y lista negra normalizada
 
-**Estado:** ⬜ Pendiente · **Tipo:** seguridad · **Depende de:** 025, 036
+**Estado:** 🟨 Implementado · pruebas unitarias ✅ · ⬜ PC: DeepHat real · **Tipo:** seguridad · **Depende de:** 025, 036
 **Motivo:** la guarda de privacidad solo veía IPv4 y el objetivo exacto. La lista negra comparaba texto literal
 y se esquivaba cambiando espacios o mayúsculas.
 

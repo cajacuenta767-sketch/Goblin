@@ -25,6 +25,25 @@ const Approvals = {
       ? "⚠️ Confirma que tienes autorización POR ESCRITO para este objetivo antes de aprobar.\n\n"
       : "";
     this.el.text.textContent = `${aviso}${tool}\n${args}`;
+    // Spec 037, RF2: diff con líneas añadidas (verde) y quitadas (rojo). Todo con textContent.
+    const caja = document.getElementById("approvalDiff");
+    if (caja) {
+      caja.replaceChildren();
+      if (resp.diff) {
+        for (const ln of resp.diff.split("\n")) {
+          const fila = document.createElement("div");
+          fila.textContent = ln;
+          if (ln.startsWith("+++") || ln.startsWith("---")) fila.className = "hunk";
+          else if (ln.startsWith("+")) fila.className = "add";
+          else if (ln.startsWith("-")) fila.className = "del";
+          else if (ln.startsWith("@@")) fila.className = "hunk";
+          caja.append(fila);
+        }
+        caja.hidden = false;
+      } else {
+        caja.hidden = true;
+      }
+    }
     this.el.box.classList.toggle("danger", this.DANGEROUS.includes(tool));
     this.el.box.style.display = "block";
     Chat.scrollDown();

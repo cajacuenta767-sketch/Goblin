@@ -130,6 +130,15 @@ Cada spec tiene su checklist sin marcar. No se marca hasta validarla en la PC.
 - ✅ Pruebas: `test_plan.py` (8); flujo completo verificado en navegador con modelo simulado.
 - ⬜ PC: probar "crea la carpeta pruebas y luego escribe notas.txt" con DeepHat real.
 
+## Specs 036–041 — Engagement, alcance, interfaz y control — 🟨/✅
+
+- 🟨 036 Memoria del engagement (resumen en cada turno), alcance aplicado a herramientas de red, nmap estructurado. Pruebas: `test_alcance_engagement.py`. ⬜ PC: probar con DeepHat real que no sale del alcance.
+- 🟨 037 Diff antes de aprobar `write_file`/`edit_lines`, progreso y contexto. Pruebas: `test_diff_progreso.py`. ✅ Diff visible en la aprobación (Chromium).
+- 🟨 038 Privacidad: IPv6 y términos del engagement fuerzan DeepHat; lista negra normalizada. Pruebas: `test_privacidad_blacklist.py`.
+- 🟨 039 Herramientas de control: `edit_lines`, `chmod`, `http_get`, `git_ops` (sin force ni reset). Pruebas: `test_herramientas_control.py`.
+- ✅ 040 Layout con ratón: divisores, acoplar paneles arrastrando la cabecera, colapsar con doble clic, persistencia, "Restablecer disposición". Validado en Chromium con ratón (19 comprobaciones).
+- ✅ 041 Panel de engagement (Alcance, Hosts, Snippets), barra de estado (contexto, objetivo, modo). Validado en Chromium con ratón.
+
 ## Infraestructura (transversal) — ✅
 
 - ✅ `scripts/install.sh`, `run.sh`, `build.sh`, `install-nativo.sh`, `subir-github.sh`.
@@ -159,14 +168,14 @@ Orden según riesgo y valor. Cada ítem se convertirá en spec antes de programa
 - ⬜ **B-07 · Spec 007 (Monaco)**: falta el archivo; crearlo como documentación de lo construido. Además, el número 020 no existe: confirmar si se omitió a propósito.
 - ⬜ **B-08 · Monaco sin internet**: vendorizar el loader, igual que se hizo con marked/xterm.
 - ⬜ **B-09 · Pruebas de interfaz en el repo**: el E2E de navegador (Playwright) vive fuera del repo. Decidir si entra al CI.
-- ⬜ **B-10 · Ampliar la guarda de privacidad (025)**: IPv6 y lista de términos del engagement (nombres de cliente, dominios secundarios).
+- 🟨 **B-10 · Ampliar la guarda de privacidad (025)**: IPv6 y términos del engagement, hecho en spec 038.
 - ⬜ **B-11 · Marcar checklists de 008–019** cuando se validen en la PC.
 
 ### Prioridad 4 — Fase 8 y 5 (más adelante)
 
 - ⬜ **B-12 · Gestión de procesos de la terminal pty** en Detener (extiende spec 024 → spec 031).
 - ⬜ **B-13 · Fase 5 multimedia**: imágenes, video (fotogramas con ffmpeg), audio. Baja prioridad frente a pentest.
-- ⬜ **B-14 · Visor estructurado de resultados** (tabla de puertos desde nmap). Los parsers ya existen; falta la UI.
+- ✅ **B-14 · Visor estructurado de resultados** (tabla de hosts y puertos). Hecho en spec 041.
 
 ---
 

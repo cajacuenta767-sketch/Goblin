@@ -29,6 +29,7 @@ const Chat = {
 
   setBusy(on) {
     this.busy = on;
+    if (typeof Status !== "undefined" && Status) { if (on) Status.start(); else Status.stop(); }
     this.el.typing.classList.toggle("show", on);
     this.el.progress.classList.toggle("active", on);
     this.el.sendBtn.style.opacity = on ? "0.5" : "1";
@@ -93,6 +94,7 @@ const Chat = {
       Explorer.refresh();            // por si la IA cambió archivos
       if ((typeof Sessions !== "undefined" && Sessions)) Sessions.refresh();   // actualizar sidebar
       if ((typeof Findings !== "undefined" && Findings)) Findings.refresh();   // por si registró hallazgos
+      if ((typeof Engagement !== "undefined" && Engagement)) Engagement.refresh();
     }
   },
 
@@ -186,6 +188,7 @@ const Chat = {
           Explorer.refresh();
           if ((typeof Sessions !== "undefined" && Sessions)) Sessions.refresh();
           if ((typeof Findings !== "undefined" && Findings)) Findings.refresh();
+          if ((typeof Engagement !== "undefined" && Engagement)) Engagement.refresh();
           return true;
         }
       }

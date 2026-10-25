@@ -23,6 +23,7 @@ const Terminal_ = {
   toggle() {
     this.open = !this.open;
     this.el.panel.classList.toggle("show", this.open);
+    if (typeof Layout !== "undefined" && Layout.state) Layout.apply();
     if (this.open) {
       if (!this.started) this.start();
       setTimeout(() => { if (this.fit) { this.fit.fit(); this.sendResize(); } }, 50);

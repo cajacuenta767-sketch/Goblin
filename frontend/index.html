@@ -32,7 +32,7 @@
   <div id="main">
     <!-- Sidebar -->
     <aside id="sidebar">
-      <div class="top">
+      <div class="top dock-handle" title="Arrastra para mover la barra lateral">
         <img src="assets/goblin.svg" class="logo-img" id="sidebarLogo" alt="GOBLIN">
         <div class="icons"><span id="toggleSidebar" title="Mostrar/ocultar barra lateral">☰</span><span id="navBack" title="Conversación anterior">←</span><span id="navFwd" title="Conversación siguiente">→</span><span id="searchConv" title="Buscar conversaciones">⌕</span></div>
       </div>
@@ -58,9 +58,37 @@
       <div class="bottom" id="settingsBtn">⚙ Settings</div>
     </aside>
 
+    <!-- Panel de engagement: alcance, hosts y snippets (Spec 041) -->
+    <section id="engPanel">
+      <div class="eng-head dock-handle" title="Arrastra para mover · doble clic para plegar">
+        <span class="eng-title">🎯 Engagement</span>
+        <span class="eng-tabs">
+          <span class="eng-tab active" data-tab="scope">Alcance</span>
+          <span class="eng-tab" data-tab="hosts">Hosts</span>
+          <span class="eng-tab" data-tab="snips">Snippets</span>
+        </span>
+      </div>
+      <div class="eng-body">
+        <div class="eng-note" id="engNote">Solo tú editas el alcance. GOBLIN bloquea lo que salga de aquí.</div>
+        <div class="eng-pane" data-pane="scope">
+          <div class="eng-form"><input id="scopeInput" type="text" placeholder="IP, rango o dominio" autocomplete="off"><button id="scopeAdd">Añadir</button></div>
+          <div class="eng-list" id="scopeList"></div>
+          <div class="eng-sub">Términos sensibles · nunca salen a la nube</div>
+          <div class="eng-form"><input id="termInput" type="text" placeholder="Nombre de cliente o dominio" autocomplete="off"><button id="termAdd">Añadir</button></div>
+          <div class="eng-list" id="termList"></div>
+        </div>
+        <div class="eng-pane" data-pane="hosts" hidden>
+          <table class="eng-table"><thead><tr><th>Host</th><th>Puerto</th><th>Servicio</th><th>Versión</th></tr></thead><tbody id="hostsBody"></tbody></table>
+        </div>
+        <div class="eng-pane" data-pane="snips" hidden>
+          <div id="snipList"></div>
+        </div>
+      </div>
+    </section>
+
     <!-- Chat -->
     <section id="chat">
-      <div class="chat-head">
+      <div class="chat-head dock-handle" title="Arrastra para mover el chat">
         <span class="title" id="chatTitle">GOBLIN</span>
         <div class="right"><span id="chatMenu" class="kebab" title="Opciones de la conversación">⋮</span></div>
       </div>
@@ -71,12 +99,13 @@
         </div>
 
         <!-- Indicador de "trabajando" -->
-        <div class="typing" id="typing"><span class="spinner"></span> GOBLIN está trabajando…</div>
+        <div class="typing" id="typing"><span class="spinner"></span> <span id="typingText">GOBLIN está trabajando…</span></div>
 
         <!-- Caja de aprobación -->
         <div id="approval">
           <div class="head">⚠️ <span>La IA quiere ejecutar una acción</span></div>
           <pre id="approvalText"></pre>
+          <pre id="approvalDiff" class="diff" hidden></pre>
           <div class="btns">
             <button class="ok" id="approveBtn">Aprobar</button>
             <button class="deny" id="denyBtn">Denegar</button>
@@ -86,7 +115,7 @@
 
       <!-- Panel de terminal (pty real) -->
       <div id="termPanel">
-        <div class="term-head">
+        <div class="term-head dock-handle" title="Arrastra para acoplar la terminal en otra zona · doble clic para plegar">
           <span class="term-tab" id="termTabBtn" title="Mostrar/ocultar terminal">● bash</span>
           <span class="term-actions">
             <span id="termToggle" title="Mostrar/ocultar terminal">⌃</span>
@@ -113,7 +142,7 @@
 
     <!-- Explorador + Editor -->
     <aside id="right">
-      <div class="ws-head">
+      <div class="ws-head dock-handle" title="Arrastra para mover el explorador">
         <span>📂</span>
         <span class="path" id="wsPath">workspace</span>
         <span class="r" id="wsRefresh" title="Refrescar">↻</span>
@@ -149,7 +178,9 @@
   <div id="statusbar">
     <span class="item"><span id="stOllama">●</span> <span id="stOllamaText">Ollama</span></span>
     <span class="item">Modelo: <span class="accent" id="stModel">—</span></span>
-    <span class="item">Modo: <span id="stMode">Local</span></span>
+    <span class="item">Modo: <span id="stMode" class="mode-local">Local</span></span>
+    <span class="item">Contexto: <span id="stContext" title="Contexto estimado que recibe el modelo (caracteres ÷ 4)">—</span></span>
+    <span class="item">Objetivo: <span id="stTarget">ninguno</span></span>
     <span class="item sep">RAM: <span id="stRam">—</span></span>
     <span class="item">CPU: <span id="stCpu">—</span></span>
   </div>
@@ -191,6 +222,9 @@
   <script src="assets/tool-icons.js"></script>
   <script src="js/toolstore.js"></script>
   <script src="js/chrome.js"></script>
+  <script src="js/layout.js"></script>
+  <script src="js/engagement.js"></script>
+  <script src="js/status.js"></script>
   <script src="js/main.js"></script>
 </body>
 </html>
