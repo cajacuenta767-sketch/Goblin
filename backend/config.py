@@ -36,6 +36,8 @@ MAX_STEPS = int(os.getenv("GOBLIN_MAX_STEPS", "15"))    # tope de iteraciones (e
 SHELL_TIMEOUT = int(os.getenv("GOBLIN_SHELL_TIMEOUT", "180"))  # segundos por comando
 # Tope de caracteres de una salida de herramienta que vuelve al modelo (Spec 032).
 TOOL_OUTPUT_CHARS = int(os.getenv("GOBLIN_TOOL_OUTPUT_CHARS", "6000"))
+# Tope de tokens de respuesta cuando el turno no usa herramientas (charla, preguntas).
+CHAT_MAX_TOKENS = int(os.getenv("GOBLIN_CHAT_MAX_TOKENS", "300"))
 
 # --- Router híbrido / Gemini (Spec 008, opcional) ---
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "").strip()

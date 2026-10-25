@@ -75,3 +75,21 @@ def test_accion_envia_herramientas_al_modelo(monkeypatch):
     monkeypatch.setattr(config, "FAST_MODEL", "")
     list(agent.stream_message("sess-033-b", "crea la carpeta pruebas", None))
     assert fake.calls[0]["tools"] is not None
+
+
+# --- Límite de respuesta en charla (RF de respuesta corta) ---
+
+def test_charla_tiene_tope_de_tokens(monkeypatch):
+    fake = _Fake([_chunk("Hola")])
+    monkeypatch.setattr(agent, "client", fake)
+    monkeypatch.setattr(config, "FAST_MODEL", "")
+    list(agent.stream_message("sess-033-c", "hola como estas", None))
+    assert fake.calls[0]["options"]["num_predict"] == config.CHAT_MAX_TOKENS
+
+
+def test_accion_no_tiene_tope_de_tokens(monkeypatch):
+    fake = _Fake([_chunk("Listo")])
+    monkeypatch.setattr(agent, "client", fake)
+    monkeypatch.setattr(config, "FAST_MODEL", "")
+    list(agent.stream_message("sess-033-d", "crea la carpeta pruebas", None))
+    assert "num_predict" not in fake.calls[0]["options"]

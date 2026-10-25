@@ -84,6 +84,15 @@ def _opts() -> dict:
     return {"num_ctx": config.NUM_CTX, "num_thread": config.NUM_THREAD}
 
 
+def _stream_opts(tools) -> dict:
+    """Opciones para el stream. Sin herramientas (charla), la respuesta tiene tope de tokens:
+    en CPU una respuesta larga a un saludo cuesta minutos (Spec 033, límite de respuesta)."""
+    opts = _opts()
+    if tools is None:
+        opts["num_predict"] = config.CHAT_MAX_TOKENS
+    return opts
+
+
 def _fit_tool_output(text: str, limit: int | None = None) -> str:
     """Recorta una salida de herramienta para el modelo, conservando inicio y final (RF3).
 
@@ -458,7 +467,8 @@ def stream_message(sid: str, text: str, model: str | None = None):
 
     def _open_stream():
         return client.chat(model=use_model, messages=s["messages"], tools=use_tools,
-                           options=_opts(), keep_alive=config.KEEP_ALIVE, stream=True)
+                           options=_stream_opts(use_tools), keep_alive=config.KEEP_ALIVE,
+                           stream=True)
 
     # UNA sola generación (RF1): el texto se muestra en vivo; si aparece una herramienta,
     # el texto ya mostrado se descarta y se sigue por el flujo normal con aprobaciones.
