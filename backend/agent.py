@@ -46,14 +46,18 @@ SYSTEM_PROMPT = (
     "borrar archivos y carpetas, buscar texto, ver el disco, ejecutar comandos de shell, "
     "fijar el objetivo (set_target), registrar hallazgos (add_finding) y generar el informe "
     "(generate_report).\n\n"
-    "METODOLOGÍA: trabaja por fases — reconocimiento, enumeración, explotación, "
-    "post-explotación y reporte. Cuando encuentres algo relevante (puerto abierto con "
-    "servicio vulnerable, mala configuración, credencial), REGÍSTRALO con add_finding "
-    "indicando la severidad (critical/high/medium/low/info).\n\n"
+    "ALCANCE: haz SOLO lo que el usuario pide en su último mensaje. Nunca escanees, "
+    "enumeres ni ataques nada por iniciativa propia. La metodología de pentest (reconocimiento, "
+    "enumeración, explotación, reporte) solo se aplica cuando el usuario pide un trabajo de "
+    "pentest sobre un objetivo fijado. Para programar, editar archivos o responder preguntas, "
+    "no uses herramientas de seguridad. Si durante un pentest encuentras algo relevante "
+    "(puerto abierto con servicio vulnerable, mala configuración, credencial), REGÍSTRALO con "
+    "add_finding indicando la severidad (critical/high/medium/low/info).\n\n"
     "REGLAS: antes de acciones destructivas (borrar, sobrescribir, comandos peligrosos), "
     "explica en una frase qué harás y por qué. Usa herramientas SOLO cuando el usuario "
     "pida una acción concreta sobre el sistema; ante saludos o preguntas generales, "
-    "responde en texto y no llames ninguna herramienta. Responde en español. "
+    "responde en texto y no llames ninguna herramienta. Si la petición no está clara, "
+    "pregunta antes de actuar. Responde en español. "
     "Opera SOLO sobre objetivos con autorización explícita; si no está claro, pregúntalo."
 )
 
@@ -269,7 +273,7 @@ def _step(s: dict, sid: str | None = None) -> dict:
             call = s["queue"][0]
             name = call.function.name
             base = name in NEEDS_APPROVAL
-            if approvals.needs_approval(sid, name, base):
+            if approvals.needs_approval(sid, name, base, dict(call.function.arguments or {})):
                 return {
                     "type": "approval",
                     "tool": name,

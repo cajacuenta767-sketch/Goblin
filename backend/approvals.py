@@ -35,11 +35,42 @@ def set_level(sid: str, level: str) -> str:
     return level
 
 
-def needs_approval(sid: str, tool: str, base_needs_approval: bool) -> bool:
+# Herramientas de escaneo y ataque. Si la IA las lanza por run_shell, SIEMPRE pide
+# aprobación, incluso en nivel "confianza" (no se ejecutan sin que el usuario lo vea).
+SECURITY_COMMANDS = {
+    "nmap", "masscan", "sqlmap", "nikto", "gobuster", "ffuf", "feroxbuster", "dirb",
+    "hydra", "medusa", "msfconsole", "msfvenom", "hping3", "wpscan", "enum4linux",
+    "crackmapexec", "responder", "john", "hashcat", "aircrack-ng", "burpsuite",
+    "searchsploit", "nc", "ncat", "netcat",
+}
+
+
+def is_security_command(command: str) -> bool:
+    """True si el comando de shell lanza una herramienta de escaneo o ataque."""
+    import re
+    import shlex
+    try:
+        tokens = shlex.split(command or "")
+    except ValueError:
+        tokens = (command or "").split()
+    for tok in tokens:
+        # Saltar prefijos comunes: sudo, env, variables VAR=valor, timeout, nohup.
+        if tok in {"sudo", "env", "timeout", "nohup", "time"} or re.match(r"^\w+=", tok):
+            continue
+        if tok.startswith("-"):
+            continue
+        name = tok.rsplit("/", 1)[-1]
+        return name in SECURITY_COMMANDS
+    return False
+
+
+def needs_approval(sid: str, tool: str, base_needs_approval: bool, args: dict | None = None) -> bool:
     """True si la herramienta debe pedir aprobación al usuario."""
     if not base_needs_approval:
         return False               # herramientas de solo lectura: nunca piden
     if tool in _ALWAYS_ASK:
         return True                # delete siempre pide
+    if tool == "run_shell" and is_security_command((args or {}).get("command", "")):
+        return True                # escaneos y ataques: siempre se preguntan
     level = get_level(sid)
     return tool not in _AUTO.get(level, set())
