@@ -146,6 +146,13 @@ Cada spec tiene su checklist sin marcar. No se marca hasta validarla en la PC.
 - ✅ Pestañas del editor: cambios sin guardar conservados, aviso en línea al cerrar, Ctrl+S (E2E, 14 comprobaciones).
 - ⬜ PC: terminal pty real en Parrot y ejecutar `./scripts/fetch-monaco.sh` una vez con internet.
 
+## Spec 042 — Dictado con Whisper local — 🟨
+
+- ✅ Solo Whisper local: el audio no sale del equipo; sin Whisper el botón 🎤 queda oculto y la barra lo explica.
+- ✅ `POST /api/transcribe` (solo local, límites de tamaño y de 60 s) y `GET /api/voice/status` (13 pruebas: `test_voz.py`).
+- ✅ Micrófono y transcripción en Chromium con micrófono falso (12 comprobaciones).
+- ⬜ PC: transcripción real: `.venv/bin/pip install faster-whisper`, `./scripts/fetch-whisper.sh` y probar 2 segundos de voz.
+
 ## Infraestructura (transversal) — ✅
 
 - ✅ `scripts/install.sh`, `run.sh`, `build.sh`, `install-nativo.sh`, `subir-github.sh`.
@@ -187,6 +194,9 @@ Orden según riesgo y valor. Cada ítem se convertirá en spec antes de programa
 ---
 
 ## Validaciones que solo puede hacer el usuario (PC)
+
+- ⬜ Dictado real con Whisper `base` (spec 042) y `./scripts/fetch-monaco.sh` / `./scripts/fetch-whisper.sh` una vez con internet.
+- ⬜ Terminal pty real en Parrot: Detener mata lo que lanzó la IA (spec 043).
 
 - ⬜ T001.10 · Chat con DeepHat real.
 - ⬜ T003.10 · Compilar el paquete en Parrot y validar la ventana nativa (incluye controles de ventana de spec 023).

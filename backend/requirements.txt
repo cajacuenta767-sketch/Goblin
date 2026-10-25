@@ -26,4 +26,4 @@ psutil==6.*
 # google-generativeai==0.8.*
 
 # --- Fases posteriores (comentadas hasta que toque) ---
-# faster-whisper==1.*        # dictado por voz (Spec 009)
+# faster-whisper==1.*        # dictado por voz con Whisper local (Specs 009 y 042); luego ./scripts/fetch-whisper.sh

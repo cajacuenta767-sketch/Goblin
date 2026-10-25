@@ -74,6 +74,9 @@ else
   info "Si luego quieres la app nativa, ejecuta: ./scripts/install-nativo.sh"
 fi
 
+# --- 6b. Dictado por voz (opcional, Spec 042) ---
+info "Dictado por voz (opcional, no se instala solo): .venv/bin/pip install faster-whisper && ./scripts/fetch-whisper.sh"
+
 # --- 7. Permisos ---
 chmod +x scripts/*.sh
 

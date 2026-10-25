@@ -37,6 +37,21 @@ const API = {
   // Snippets de pentest (Spec 041, RF4)
   snippets() { return this._get("/api/snippets"); },
 
+  // Dictado con Whisper local (Spec 042): estado y transcripción (la grabación no sale del equipo)
+  voiceStatus() { return this._get("/api/voice/status"); },
+
+  async transcribe(blob) {
+    const r = await fetch("/api/transcribe", {
+      method: "POST",
+      headers: { "Content-Type": blob.type || "audio/webm" },
+      body: blob,
+    });
+    let cuerpo = {};
+    try { cuerpo = await r.json(); } catch { /* respuesta sin JSON */ }
+    if (!r.ok) throw new Error(cuerpo.detail || `HTTP ${r.status} al transcribir`);
+    return cuerpo;
+  },
+
   // Chat: envía un mensaje al agente
   chat(sessionId, message, model) {
     return this._post("/api/chat", { session_id: sessionId, message, model });

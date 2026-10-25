@@ -5,10 +5,11 @@ Escucha solo en 127.0.0.1 (nadie externo puede acceder).
 """
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
+from starlette.concurrency import run_in_threadpool
 from ollama import Client
 
 import config
@@ -17,6 +18,7 @@ import scope
 import state
 import terminal
 import db
+import voice_stt
 from tools import list_dir
 
 FRONTEND = Path(__file__).resolve().parent.parent / "frontend"
@@ -443,6 +445,33 @@ async def ws_terminal(websocket: WebSocket):
         await terminal.run_terminal(websocket, cwd)
     except WebSocketDisconnect:
         pass
+
+
+@app.get("/api/voice/status")
+def voice_status():
+    """Dictado (Spec 042 RF5): si Whisper local está listo y, si no, por qué."""
+    return voice_stt.status()
+
+
+@app.post("/api/transcribe")
+async def transcribe(request: Request):
+    """Dictado (Spec 042 RF2): transcribe la grabación con Whisper local. Solo desde este equipo."""
+    host = request.client.host if request.client else ""
+    if host not in ("127.0.0.1", "::1", "localhost"):
+        raise HTTPException(status_code=403, detail="El dictado solo acepta peticiones de este equipo.")
+    try:
+        tamano = int(request.headers.get("content-length") or 0)
+    except ValueError:
+        tamano = 0
+    if tamano > voice_stt.MAX_BYTES:
+        raise HTTPException(status_code=413, detail="La grabación es demasiado grande.")
+    datos = await request.body()
+    mime = request.headers.get("content-type", "")
+    try:
+        texto = await run_in_threadpool(voice_stt.transcribe_bytes, datos, mime)
+    except voice_stt.VoiceError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    return {"ok": True, "text": texto}
 
 
 # Sirve el frontend (debe ir al final para no tapar las rutas /api)
