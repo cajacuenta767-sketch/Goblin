@@ -13,10 +13,9 @@ const Voice = {
 
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SR) {
-      this.el.btn.title = "Tu navegador no soporta dictado por voz";
-      this.el.btn.addEventListener("click", () => {
-        alert("Este navegador no soporta reconocimiento de voz (Web Speech API).");
-      });
+      // Sin Web Speech API (p. ej. WebKitGTK en Linux): se oculta el botón.
+      // Antes mostraba un alert() nativo al pulsarlo.
+      this.el.btn.style.display = "none";
       return;
     }
 

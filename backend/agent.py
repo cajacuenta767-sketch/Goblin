@@ -574,6 +574,7 @@ def stream_message(sid: str, text: str, model: str | None = None):
     # el texto ya mostrado se descarta y se sigue por el flujo normal con aprobaciones.
     full = ""
     tool_seen = False
+    reason = None   # motivo de fin de Ollama: "length" = cortada por el tope de tokens
     halt = threading.Event()
     try:
         for kind, item in _iter_chunks(_open_stream, sid, halt):
@@ -583,6 +584,7 @@ def stream_message(sid: str, text: str, model: str | None = None):
                 tool_seen = True
                 halt.set()
                 break
+            reason = getattr(item, "done_reason", None) or reason
             piece = item.message.content or ""
             if piece:
                 full += piece
@@ -611,6 +613,11 @@ def stream_message(sid: str, text: str, model: str | None = None):
         yield {"type": "stopped", "content": "Detenido por el usuario.", "model": s["model"]}
         return
 
+    if reason == "length":
+        # Que el usuario sepa que la respuesta no terminó, en vez de un corte sin explicación.
+        aviso = "\n\n[Respuesta cortada por longitud. Escribe «continúa» para seguir.]"
+        full += aviso
+        yield {"type": "token", "content": aviso}
     s["messages"].append({"role": "assistant", "content": full})
     try:
         db.add_message(sid, "assistant", full, label)
